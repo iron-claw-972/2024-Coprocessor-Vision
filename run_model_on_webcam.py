@@ -14,9 +14,15 @@
 # limitations under the License.
 
 """
-This is a program to run a retrained detector model
-To run type: python examples/detect_image_webcam.py --model test_data/cone_cube_detector_v4_edgetpu.tflite --labels test_data/cone_cube_labels.txt
-ADAPTED FROM https://github.com/google-coral/examples-camera/tree/master/opencv/detect.py AND https://github.com/google-coral/pycoral/tree/master/examples/detect_image.py
+This is a program that can be used to run detector models
+
+It cannot be used to run yolo models 
+
+This program is compatible with detector models retrained according to pycoral's documentation: https://coral.ai/docs/edgetpu/retrain-detection/
+
+To run type: python3.9 detect_image_webcam.py --model models_and_labels/cone_cube_detector_v4_edgetpu.tflite --labels models_and_labels/cone_cube_labels.txt
+
+PROGRAM ADAPTED FROM https://github.com/google-coral/examples-camera/tree/master/opencv/detect.py AND https://github.com/google-coral/pycoral/tree/master/examples/detect_image.py
 """
 
 import argparse
