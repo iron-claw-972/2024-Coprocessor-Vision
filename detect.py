@@ -79,12 +79,12 @@ def main():
 		if(len(pred) == 0): #check if prediction array is empty or not 
 			distances = []
 			for prediction in pred: 
-				distance = model.get_distance(prediction,actual_obj_width=2.32,actual_obj_dist=6.04)
+				distance = model.get_distance(prediction,actual_obj_width_cm=2.32,actual_obj_dist_cm=6.04)
 				distances.append(distance)
 			
 			pred_index_min_dist = distances.index(min(distances))
 
-			distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width=2.32,actual_obj_dist=6.04)
+			distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width_cm=2.32,actual_obj_dist_cm=6.04)
 			x_offset_deg_nt = model.get_x_offset_deg(pred[pred_index_min_dist])
 			y_offset_deg_nt = model.get_y_offset_deg(pred[pred_index_min_dist])
 
