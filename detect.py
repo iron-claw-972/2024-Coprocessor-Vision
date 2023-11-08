@@ -76,15 +76,21 @@ def main():
 		#print(f"Frame done in {tinference+tnms}")
 		#print(model.get_angles(pred[0],image,pad))
 
-		angles = model.get_angles(pred[0])
-		distance = model.get_distance(pred[0])
-		print(distance)
+		if(len(pred) == 0): #check if prediction array is empty or not 
+			distances = []
+			for prediction in pred: 
+				distance = model.get_distance(prediction)
+				distances.append(distance)
+			
+			pred_index_min_dist = distances.index(min(distances))
 
-		#print(x)
-		if(distance != None):
-			ntables.publish_distance(distance)
+			distance_nt = model.get_distance(pred[pred_index_min_dist])
+			x_offset_deg_nt = model.get_x_offset_deg(pred[pred_index_min_dist])
+			y_offset_deg_nt = model.get_y_offset_deg(pred[pred_index_min_dist])
 
-
+			ntables.publish_distance(distance_nt)
+			ntables.publish_x_offset_deg(x_offset_deg_nt)
+			ntables.publish_y_offset_deg(y_offset_deg_nt)
 
     # cv2 closing process
 	cap.release()

@@ -286,38 +286,47 @@ class EdgeTPUModel:
 
             estimated_distance = actual_width*focal_length/res[-1]
             
-            estimated_distance = float(estimated_distance)
-
-            return estimated_distance
+            return float(estimated_distance) 
         
-    def get_angles(self, det):
+    def get_x_offset_deg(self, det):
         #source: Limelight docs(LINK HERE)
         hfov = 62.8*(math.pi/180) 
+
+        if len(det):
+            xyxy = det[:,:4][0]
+
+            bbox_center_coord = [(xyxy[2]+xyxy[0])/2,(xyxy[3]+xyxy[1])/2]
+
+            cx = bbox_center_coord[0]
+
+            nx = (cx-320)/320
+
+            vw = 2*math.tan((hfov/2))
+
+            vx = vw/2*nx
+
+            x_offset_deg = math.atan(vx/1)
+
+            return float(x_offset_deg)
+                    
+    def get_y_offset_deg(self, det):
+        #source: Limelight docs(LINK HERE)
         vfov = 37.9*(math.pi/180)
 
         if len(det):
             xyxy = det[:,:4][0]
+            
             bbox_center_coord = [(xyxy[2]+xyxy[0])/2,(xyxy[3]+xyxy[1])/2]
 
-            cx = bbox_center_coord[0]
             cy = bbox_center_coord[1]
 
-
-            nx = (cx-320)/320
             ny = (240-cy)/240 
 
-            vw = 2*math.tan((hfov/2))
             vh = 2*math.tan((vfov/2))
 
-            vx = vw/2*nx
             vy = vh/2*ny
 
-            tx = math.atan(vx/1)
-            ty = math.atan(vy/1)
+            y_offset_deg = math.atan(vy/1)
 
-            angles = [tx*(180/math.pi),ty*(180/math.pi)]
-
-            return angles
-                    
-    
+            return float(y_offset_deg)     
 
