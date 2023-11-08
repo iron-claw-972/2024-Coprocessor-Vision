@@ -268,7 +268,7 @@ class EdgeTPUModel:
               return output_image # CHANGED
             
         #return det
-    def get_distance(self, det):
+    def get_distance(self, det, actual_obj_width, actual_obj_dist):
         #source: pyimagesearch, LINK HERE 
         if len(det):
             # Rescale boxes from img_size to im0 size
@@ -279,8 +279,8 @@ class EdgeTPUModel:
             #result list: [object_id, apparent_pixel_width]
             res = [det[0][-1],apparent_pixel_width]
                 
-            actual_distance = 6.04 # inches at 380 pixels
-            actual_width = 2.32 #inches
+            actual_width = actual_obj_width #for computer mouse: 2.32 inches
+            actual_distance = actual_obj_dist #for computer mouse: 6.04 inches at 380 pixels
 
             focal_length = res[-1]*actual_distance/actual_width
 
