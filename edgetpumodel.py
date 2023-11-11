@@ -295,7 +295,6 @@ class EdgeTPUModel:
 
         if len(det):
             xyxy = det[:,:4][0]
-
             bbox_center_coord = [(xyxy[2]+xyxy[0])/2,(xyxy[3]+xyxy[1])/2]
 
             cx = bbox_center_coord[0]
@@ -306,7 +305,7 @@ class EdgeTPUModel:
 
             vx = vw/2*nx
 
-            x_offset_deg = math.atan(vx/1)
+            x_offset_deg = math.atan(vx/1)*(180/math.pi)
 
             return float(x_offset_deg)
                     
@@ -327,7 +326,7 @@ class EdgeTPUModel:
 
             vy = vh/2*ny
 
-            y_offset_deg = math.atan(vy/1)
+            y_offset_deg = math.atan(vy/1)*(180/math.pi)
 
             return float(y_offset_deg)     
 

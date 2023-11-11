@@ -32,11 +32,12 @@ from utils import get_image_tensor
 import numpy as np
 import cv2
 import ntables
+from pathlib import Path
 
 def main():
 	# get model and labels
-	model_name = "/home/ironclaw/MoreVision/2024-Coprocessor-Vision/edgetpu-yolo/yolov5s-int8-224_edgetpu.tflite"#input("Model File (Weights in Tflite):")
-	names_yaml = "/home/ironclaw/MoreVision/2024-Coprocessor-Vision/edgetpu-yolo/data/coco.yaml"#input("Path to <names>.yaml file:")
+	model_name = "yolov5s-int8-224_edgetpu.tflite"#input("Model File (Weights in Tflite):")
+	names_yaml = "data/coco.yaml"#input("Path to <names>.yaml file:")
 	
 	# setup edge tpu model
 	model = EdgeTPUModel(model_name, names_yaml, conf_thresh=0.7, iou_thresh=0.45)
@@ -73,24 +74,28 @@ def main():
     	# plot the time it took to process the predictions (dosen't include cv2.imshow time)
     	# GOAL: 50 FPS (to match with robot periodic)
 		tinference, tnms = model.get_last_inference_time()
-		#print(f"Frame done in {tinference+tnms}")
-		#print(model.get_angles(pred[0],image,pad))
 
-		if(len(pred) == 0): #check if prediction array is empty or not 
+
+		#y_offset_deg_nt = model.get_y_offset_deg(pred[0])
+
+		#ntables.publish_distance(distance_nt)
+		#ntables.publish_y_offset_deg(y_offset_deg_nt)
+
+		if(len(pred[0])): #check if prediction array is empty or not 
 			distances = []
 			for prediction in pred: 
-				distance = model.get_distance(prediction,actual_obj_width_meters=0.059,actual_obj_dist_cm=0.15)
+				distance = model.get_distance(prediction,actual_obj_width_meters=0.059,actual_obj_dist_meters=0.15)
 				distances.append(distance)
 			
 			pred_index_min_dist = distances.index(min(distances))
 
-			distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width_cm=2.32,actual_obj_dist_cm=6.04)
+			distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width_meters=0.059,actual_obj_dist_meters=6.04)
 			x_offset_deg_nt = model.get_x_offset_deg(pred[pred_index_min_dist])
 			y_offset_deg_nt = model.get_y_offset_deg(pred[pred_index_min_dist])
 
 			ntables.publish_distance(distance_nt)
-			ntables.publish_x_offset_deg(x_offset_deg_nt)
-			ntables.publish_y_offset_deg(y_offset_deg_nt)
+			ntables.publish_x_angle_offset(x_offset_deg_nt)
+			ntables.publish_y_angle_offset(y_offset_deg_nt)
 
     # cv2 closing process
 	cap.release()
