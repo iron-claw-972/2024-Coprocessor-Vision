@@ -34,7 +34,7 @@ import cv2
 import ntables
 from pathlib import Path
 import time
-import
+import multiprocessing
 
 def main():
 	# get model and labels
