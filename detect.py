@@ -33,6 +33,8 @@ import numpy as np
 import cv2
 import ntables
 from pathlib import Path
+import time
+import
 
 def main():
 	# get model and labels
@@ -49,8 +51,11 @@ def main():
 	
 	# setup cv2 camerayolov5s-int8-96_edgetpu.tflite
 	cap = cv2.VideoCapture(0)
-        	
+
+	    	
 	while True:
+		start_time = time.time() 
+
 		res, image = cap.read()
     	
 		if res is False:
@@ -66,6 +71,10 @@ def main():
 		model.process_predictions(pred[0], image, pad)
 		    	
     	# display image with annotation
+		end_time = time.time()
+		fps = 1/(end_time-start_time)
+
+		cv2.putText(image, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 		cv2.imshow("FRAME",image)
     	
 		if(cv2.waitKey(1) & 0xFF == ord("q")): 
