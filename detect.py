@@ -172,8 +172,10 @@ if __name__ == "__main__":
 	x = (255*np.random.random((3,*input_size))).astype(np.uint8)
 	model.forward(x)
 	
-	# setup cv2 camerayolov5s-int8-96_edgetpu.tflite
+	#create process classes from multiprocessing library, passing the processes(the uncalled function) as parameters 
 	p1 = multiprocessing.Process(target=process1)
 	p2 = multiprocessing.Process(target=process2)
+
+	#start the processes in parallel on multiple cores(?)
 	p1.start()
 	p2.start()
