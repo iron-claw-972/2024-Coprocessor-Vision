@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.9
 
 # Based off of: https://github.com/jveitchmichaelis/edgetpu-yolo/blob/main/detect.py
+#multiprocessing code: https://machinelearningmastery.com/multiprocessing-in-python/
+
 
 """
 Instalation for librarys: ( can skip steps like pytorch if already done)
@@ -171,5 +173,7 @@ if __name__ == "__main__":
 	model.forward(x)
 	
 	# setup cv2 camerayolov5s-int8-96_edgetpu.tflite
-	process1()
-	process2()
+	p1 = multiprocessing.Process(target=process1)
+	p2 = multiprocessing.Process(target=process2)
+	p1.start()
+	p2.start()
