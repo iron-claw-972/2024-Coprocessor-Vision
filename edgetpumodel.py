@@ -268,26 +268,25 @@ class EdgeTPUModel:
               return output_image # CHANGED
             
         #return det
-    def get_distance(self, det, actual_obj_width_meters, actual_obj_dist_meters):
+    def get_distance(self, det, calibration_pixel_width, actual_obj_width_meters, calibration_dist_meters):
         #source: pyimagesearch, LINK HERE 
         if len(det):
             # Rescale boxes from img_size to im0 size
             # x1, y1, x2, y2=
             #det[:, :4] = self.get_scaled_coords(det[:,:4], output_image, pad)
-            apparent_pixel_width =  abs(det[:, :4][0][0]-det[:, :4][0][2])
-
+            xyxy = det[:,:4][0]
+            apparent_pixel_width = abs(xyxy[2]-xyxy[0])
             #result list: [object_id, apparent_pixel_width]
-            res = [det[0][-1],apparent_pixel_width]
-                
-            actual_width = actual_obj_width_meters #for computer mouse: 2.32 inches
-            actual_distance = actual_obj_dist_meters #for computer mouse: 6.04 inches at 380 pixels
+            #res = [det[0][-1],apparent_pixel_width] 
+            # actual_width = actual_obj_width_meters #for computer mouse: 2.32 inches
+            # actual_distance = actual_obj_dist_meters #for computer mouse: 6.04 inches at 380 pixels
 
-            focal_length = res[-1]*actual_distance/actual_width
+            focal_length = (calibration_pixel_width*calibration_dist_meters)/actual_obj_width_meters
 
-            estimated_distance = actual_width*focal_length/res[-1]
+            estimated_distance = (actual_obj_width_meters*focal_length)/apparent_pixel_width
             
             #return estimated distance in meters
-            return float(estimated_distance) 
+            return estimated_distance
         
     def get_x_offset_deg(self, det):
         #source: Limelight docs(LINK HERE)

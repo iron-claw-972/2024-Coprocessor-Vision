@@ -72,7 +72,7 @@ def main():
 		    	
     	# display image with annotation
 		end_time = time.time()
-		fps = 1/(end_time-start_time)
+		fps = str(int(1/(end_time-start_time)))
 
 		cv2.putText(image, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 		cv2.imshow("FRAME",image)
@@ -91,20 +91,22 @@ def main():
 		#ntables.publish_y_offset_deg(y_offset_deg_nt)
 
 		if(len(pred[0])): #check if prediction array is empty or not 
-			distances = []
-			for prediction in pred: 
-				distance = model.get_distance(prediction,actual_obj_width_meters=0.059,actual_obj_dist_meters=0.15)
-				distances.append(distance)
+			distance = model.get_distance(pred[0],calibration_pixel_width=300, actual_obj_width_meters=0.045,calibration_dist_meters=1)
+			print(distance)
+			# distances = []
+			# for prediction in pred: 
+			# 	distance = model.get_distance(prediction,actual_obj_width_meters=0.059,actual_obj_dist_meters=0.15)
+			# 	distances.append(distance)
 			
-			pred_index_min_dist = distances.index(min(distances))
+			# pred_index_min_dist = distances.index(min(distances))
 
-			distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width_meters=0.059,actual_obj_dist_meters=6.04)
-			x_offset_deg_nt = model.get_x_offset_deg(pred[pred_index_min_dist])
-			y_offset_deg_nt = model.get_y_offset_deg(pred[pred_index_min_dist])
+			# distance_nt = model.get_distance(pred[pred_index_min_dist],actual_obj_width_meters=0.059,actual_obj_dist_meters=6.04)
+			# x_offset_deg_nt = model.get_x_offset_deg(pred[pred_index_min_dist])
+			# y_offset_deg_nt = model.get_y_offset_deg(pred[pred_index_min_dist])
 
-			ntables.publish_distance(distance_nt)
-			ntables.publish_x_angle_offset(x_offset_deg_nt)
-			ntables.publish_y_angle_offset(y_offset_deg_nt)
+			# ntables.publish_distance(distance_nt)
+			# ntables.publish_x_angle_offset(x_offset_deg_nt)
+			# ntables.publish_y_angle_offset(y_offset_deg_nt)
 
     # cv2 closing process
 	cap.release()
