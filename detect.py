@@ -1,80 +1,56 @@
-#Code made from: 
-#https://dipankarmedh1.medium.com/real-time-object-detection-with-yolo-and-webcam-enhancing-your-computer-vision-skills-861b97c78993
-#https://docs.ultralytics.com/modes/track/#multithreaded-tracking
-from ultralytics import YOLO
-import cv2
-import math 
 import threading
-import util
+import cv2
+from ultralytics import YOLO
 
-cam_one_idx = 0
-cam_two_idx = 1
 
-cam1_capture = cv2.VideoCapture(cam_one_idx)
-cam2_capture = cv2.VideoCapture(cam_two_idx)
+def run_tracker_in_thread(filename, model, file_index):
+    """
+    Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
-cam1_capture.set(4, 480)
-cam2_capture.set(4,480)
+    This function captures video frames from a given file or camera source and utilizes the YOLOv8 model for object
+    tracking. The function runs in its own thread for concurrent processing.
 
-# model
-model = YOLO("yolov8n.pt")
+    Args:
+        filename (str): The path to the video file or the identifier for the webcam/external camera source.
+        model (obj): The YOLOv8 model object.
+        file_index (int): An index to uniquely identify the file being processed, used for display purposes.
 
-# object classes
-classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
-              "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
-              "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
-              "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
-              "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
-              "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
-              "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
-              "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
-              "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
-              "teddy bear", "hair drier", "toothbrush"
-              ]
+    Note:
+        Press 'q' to quit the video display window.
+    """
+    video = cv2.VideoCapture(filename)  # Read the video file
 
-def run_inference(camera_idx,camera_capture):
-    while True: 
-        result,img = camera_capture.read()
-        inference = model(img,stream=True)
+    while True:
+        ret, frame = video.read()  # Read the video frames
 
-        # coordinates
-        for inf in inference:
-            boxes = inf.boxes
-
-            for box in boxes:
-                # bounding box
-                x1, y1, x2, y2 = box.xyxy[0]
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2) # convert to int values
-
-                # put box in cam
-                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3)
-
-                # confidence
-                confidence = math.ceil((box.conf[0]*100))/100
-                print("Confidence --->",confidence)
-
-                # class name
-                cls = int(box.cls[0])
-                print("Class name -->", classNames[cls])
-
-                # object details
-                org = [x1, y1]
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                fontScale = 1
-                color = (255, 0, 0)
-                thickness = 2
-
-                cv2.putText(img, classNames[cls], org, font, fontScale, color, thickness)
-
-        cv2.imshow('Webcam', img)
-        if cv2.waitKey(1) == ord('q'):
+        # Exit the loop if no more frames in either video
+        if not ret:
             break
 
-    camera_capture.release()
+        # Track objects in frames if available
+        results = model.track(frame, persist=True)
+        res_plotted = results[0].plot()
+        cv2.imshow(f"Tracking_Stream_{file_index}", res_plotted)
+
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            break
+
+    # Release video sources
+    video.release()
+
+
+# Load the models
+model1 = YOLO('yolov8n.pt')
+model2 = YOLO('yolov8n.pt')
+
+# Define the video files for the trackers
+video_file1 = 0  # Path to video file, 0 for webcam
+video_file2 = 1  # Path to video file, 0 for webcam, 1 for external camera
 
 # Create the tracker threads
-tracker_thread1 = threading.Thread(target=run_inference, args=(cam_one_idx,cam1_capture), daemon=True)
-tracker_thread2 = threading.Thread(target=run_inference, args=(cam_two_idx,cam2_capture), daemon=True)
+tracker_thread1 = threading.Thread(target=run_tracker_in_thread, args=(video_file1, model1, 1), daemon=True)
+tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
 
 # Start the tracker threads
 tracker_thread1.start()
@@ -84,4 +60,5 @@ tracker_thread2.start()
 tracker_thread1.join()
 tracker_thread2.join()
 
+# Clean up and close windows
 cv2.destroyAllWindows()
