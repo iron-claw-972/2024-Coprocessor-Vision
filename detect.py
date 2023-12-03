@@ -5,6 +5,7 @@ from ultralytics import YOLO
 import cv2
 import math 
 import threading
+import util
 
 cam_one_idx = 0
 cam_two_idx = 1
@@ -31,7 +32,7 @@ classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "trai
               "teddy bear", "hair drier", "toothbrush"
               ]
 
-def run_inference(camera_capture):
+def run_inference(camera_idx,camera_capture):
     while True: 
         result,img = camera_capture.read()
         inference = model(img,stream=True)
@@ -72,8 +73,8 @@ def run_inference(camera_capture):
     camera_capture.release()
 
 # Create the tracker threads
-tracker_thread1 = threading.Thread(target=run_inference, args=(cam1_capture), daemon=True)
-tracker_thread2 = threading.Thread(target=run_inference, args=(cam2_capture), daemon=True)
+tracker_thread1 = threading.Thread(target=run_inference, args=(cam_one_idx,cam1_capture), daemon=True)
+tracker_thread2 = threading.Thread(target=run_inference, args=(cam_two_idx,cam2_capture), daemon=True)
 
 # Start the tracker threads
 tracker_thread1.start()
@@ -82,6 +83,5 @@ tracker_thread2.start()
 # Wait for the tracker threads to finish
 tracker_thread1.join()
 tracker_thread2.join()
-
 
 cv2.destroyAllWindows()
