@@ -1,7 +1,7 @@
 import threading
 import cv2
 from ultralytics import YOLO
-
+import time
 
 def run_tracker_in_thread(filename, model, file_index):
     """
@@ -22,7 +22,7 @@ def run_tracker_in_thread(filename, model, file_index):
 
     while True:
         ret, frame = video.read()  # Read the video frames
-
+        start_time = time.time()
         # Exit the loop if no more frames in either video
         if not ret:
             break
@@ -30,6 +30,11 @@ def run_tracker_in_thread(filename, model, file_index):
         # Track objects in frames if available
         results = model.track(frame, persist=True)
         res_plotted = results[0].plot()
+        end_time = time.time()
+
+        fps = str(int(1/(end_time-start_time)))
+        cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+
         cv2.imshow(f"Tracking_Stream_{file_index}", res_plotted)
 
         key = cv2.waitKey(1)
@@ -50,15 +55,15 @@ video_file2 = 1  # Path to video file, 0 for webcam, 1 for external camera
 
 # Create the tracker threads
 tracker_thread1 = threading.Thread(target=run_tracker_in_thread, args=(video_file1, model1, 1), daemon=True)
-tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
+#tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
 
 # Start the tracker threads
 tracker_thread1.start()
-tracker_thread2.start()
+#tracker_thread2.start()
 
 # Wait for the tracker threads to finish
 tracker_thread1.join()
-tracker_thread2.join()
+#tracker_thread2.join()
 
 # Clean up and close windows
 cv2.destroyAllWindows()
