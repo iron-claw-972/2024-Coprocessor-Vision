@@ -55,15 +55,15 @@ video_file2 = 1  # Path to video file, 0 for webcam, 1 for external camera
 
 # Create the tracker threads
 tracker_thread1 = threading.Thread(target=run_tracker_in_thread, args=(video_file1, model1, 1), daemon=True)
-#tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
+tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
 
 # Start the tracker threads
 tracker_thread1.start()
-#tracker_thread2.start()
+tracker_thread2.start()
 
 # Wait for the tracker threads to finish
 tracker_thread1.join()
-#tracker_thread2.join()
+tracker_thread2.join()
 
 # Clean up and close windows
 cv2.destroyAllWindows()
