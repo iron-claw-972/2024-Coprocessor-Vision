@@ -21,6 +21,7 @@ def run_tracker_in_thread(filename, model, file_index):
     video = cv2.VideoCapture(filename)  # Read the video file
 
     while True:
+        print(f"Camera: {filename}") # For debugging 
         ret, frame = video.read()  # Read the video frames
         start_time = time.time()
         # Exit the loop if no more frames in either video
@@ -35,7 +36,7 @@ def run_tracker_in_thread(filename, model, file_index):
         fps = str(int(1/(end_time-start_time)))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        cv2.imshow(f"Tracking_Stream_{file_index}", res_plotted)
+        cv2.imshow(f"Tracking_Stream_{filename}", res_plotted)
 
         key = cv2.waitKey(1)
         if key == ord('q'):
