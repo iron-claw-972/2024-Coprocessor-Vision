@@ -2,6 +2,12 @@ import threading
 import cv2
 from ultralytics import YOLO
 import time
+import ntables
+
+# Define the video files for the trackers
+# Path to video files, 0 for webcam, 1 for external camera
+# On a robot, these should be in the same order as the cameras in VisionConstants.java
+video_files = [0, 1]
 
 def run_tracker_in_thread(filename, model, file_index):
     """
@@ -31,6 +37,8 @@ def run_tracker_in_thread(filename, model, file_index):
         # Track objects in frames if available
         results = model.track(frame, persist=True)
         res_plotted = results[0].plot()
+        # Calculate offsets and add to NetworkTables
+        ntables.add_results(results, file_index)
         end_time = time.time()
 
         fps = str(int(1/(end_time-start_time)))
@@ -45,26 +53,20 @@ def run_tracker_in_thread(filename, model, file_index):
     # Release video sources
     video.release()
 
-
-# Load the models
-model1 = YOLO('yolov8n.pt')
-model2 = YOLO('yolov8n.pt')
-
-# Define the video files for the trackers
-video_file1 = 0  # Path to video file, 0 for webcam
-video_file2 = 1  # Path to video file, 0 for webcam, 1 for external camera
-
-# Create the tracker threads
-tracker_thread1 = threading.Thread(target=run_tracker_in_thread, args=(video_file1, model1, 1), daemon=True)
-tracker_thread2 = threading.Thread(target=run_tracker_in_thread, args=(video_file2, model2, 2), daemon=True)
-
-# Start the tracker threads
-tracker_thread1.start()
-tracker_thread2.start()
+# Load the model
+model = YOLO('yolov8n.pt')
+threads = []
+for i in range(len(video_files)):
+    # Create the thread
+    thread = threading.Thread(target=run_tracker_in_thread, args=(video_files[i], model, i), daemon=True)
+    # Add to the array to use later
+    threads += thread
+    # Start the thread
+    thread.start()
 
 # Wait for the tracker threads to finish
-tracker_thread1.join()
-tracker_thread2.join()
+for thread in threads:
+    thread.join()
 
 # Clean up and close windows
 cv2.destroyAllWindows()

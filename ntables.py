@@ -1,23 +1,59 @@
 import ntcore
+import util
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
-
 table = nt_inst.getTable("object_detection")
-distance_topic = table.getDoubleTopic("distance").publish()
-x_angle_offset_topic = table.getDoubleTopic("tx").publish()
-y_angle_offset_topic = table.getDoubleTopic("ty").publish()
+distance_topic = table.getDoubleArrayTopic("distance").publish()
+x_angle_offset_topic = table.getDoubleArrayTopic("x_offset").publish()
+y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish()
+object_class_topic = table.getStringArrayTopic("class").publish()
+camera_index_topic = table.getIntArrayTopic("index").publish()
+
+distance = []
+x_offset = []
+y_offset = []
+object_class = []
+camera_index = []
 
 nt_inst.startClient4("Coprocessor")
 nt_inst.setServerTeam(972)
 
-def publish_distance(value):
-    distance_topic.set(value)
+def publish_distance():
+    distance_topic.set(distance)
 
-def publish_x_angle_offset(value):
-    x_angle_offset_topic.set(value)
-    
-def publish_y_angle_offset(value):
-    y_angle_offset_topic.set(value)
-    
+def publish_x_angle_offset():
+    x_angle_offset_topic.set(x_offset)
 
+def publish_y_angle_offset():
+    y_angle_offset_topic.set(y_offset)
+
+def publish_class():
+    object_class_topic.set(object_class)
+
+def publish_camera_index():
+    camera_index_topic.set(camera_index)
+
+def add_results(results, index):
+    # Remove old values from the same camera, do not change values from other cameras
+    for i in range(camera_index):
+        if camera_index[i] == index:
+            x_offset.pop(i)
+            y_offset.pop(i)
+            distance.pop(i)
+            object_class.pop(i)
+            camera_index.pop(i)
+            i -= 1
+    # Add new values to arrays
+    for result in results:
+        box = result.boxes
+        x_offset += util.get_x_offset_deg(box)
+        y_offset += util.get_y_offset_deg(box)
+        distance += util.get_distance(box)
+        camera_index += index
+    # Publish values to NetworkTables
+    publish_distance()
+    publish_x_angle_offset()
+    publish_y_angle_offset()
+    publish_class()
+    publish_camera_index()

@@ -1,7 +1,10 @@
 import math
-def get_x_offset_deg(self, box):
+
+fov = [62.8, 37.9]
+
+def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
-    hfov = 62.8*(math.pi/180) 
+    hfov = fov[0]*(math.pi/180) 
     
     x1, y1, x2, y2 = box.xyxy[0]
 
@@ -19,19 +22,19 @@ def get_x_offset_deg(self, box):
         x_offset_deg = math.atan(vx/1)*(180/math.pi)
 
         return float(x_offset_deg)
-                    
-def get_y_offset_deg(self, det):
-    #source: Limelight docs(LINK HERE)
-    vfov = 37.9*(math.pi/180)
+    return 0
 
-    if len(det):
-        xyxy = det[:,:4][0]
-        
-        bbox_center_coord = [(xyxy[2]+xyxy[0])/2,(xyxy[3]+xyxy[1])/2]
+def get_y_offset_deg(box):
+    #source: Limelight docs(LINK HERE)
+    vfov = fov[1]*(math.pi/180)
+    x1, y1, x2, y2 = box.xyxy[0]
+
+    if len(box[0]):
+        bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
         cy = bbox_center_coord[1]
 
-        ny = (240-cy)/240 
+        ny = (cy-320)/320
 
         vh = 2*math.tan((vfov/2))
 
@@ -39,4 +42,10 @@ def get_y_offset_deg(self, det):
 
         y_offset_deg = math.atan(vy/1)*(180/math.pi)
 
-        return float(y_offset_deg)    
+        return float(y_offset_deg)
+    
+    return 0
+ 
+    
+    def get_distance(box):
+        return 3 # TODO: Add this
