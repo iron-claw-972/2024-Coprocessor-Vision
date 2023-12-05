@@ -36,21 +36,22 @@ def publish_camera_index():
 
 def add_results(results, index):
     # Remove old values from the same camera, do not change values from other cameras
-    for i in range(camera_index):
+    i = len(camera_index) - 1
+    while i >= 0:
         if camera_index[i] == index:
             x_offset.pop(i)
             y_offset.pop(i)
             distance.pop(i)
             object_class.pop(i)
             camera_index.pop(i)
-            i -= 1
+        i -= 1
     # Add new values to arrays
     for result in results:
         box = result.boxes
-        x_offset += util.get_x_offset_deg(box)
-        y_offset += util.get_y_offset_deg(box)
-        distance += util.get_distance(box)
-        camera_index += index
+        x_offset.append(util.get_x_offset_deg(box))
+        y_offset.append(util.get_y_offset_deg(box))
+        distance.append(util.get_distance(box))
+        camera_index.append(index)
     # Publish values to NetworkTables
     publish_distance()
     publish_x_angle_offset()
