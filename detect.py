@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import threading
 import cv2
 from ultralytics import YOLO
