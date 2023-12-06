@@ -9,6 +9,8 @@ import ntables
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 video_files = [0, 1]
 
+lock = threading.Lock()
+
 def run_tracker_in_thread(filename, model, file_index):
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
@@ -27,6 +29,7 @@ def run_tracker_in_thread(filename, model, file_index):
     video = cv2.VideoCapture(filename)  # Read the video file
 
     while True:
+        lock.acquire()
         print(f"Camera: {filename}") # For debugging 
         ret, frame = video.read()  # Read the video frames
         start_time = time.time()
@@ -49,6 +52,7 @@ def run_tracker_in_thread(filename, model, file_index):
         key = cv2.waitKey(1)
         if key == ord('q'):
             break
+        lock.release()
 
     # Release video sources
     video.release()
