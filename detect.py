@@ -11,7 +11,7 @@ video_files = [0, 1]
 
 lock = threading.Lock()
 
-def run_tracker_in_thread(filename, model, file_index):
+def run_tracker_in_thread(filename, model, file_index, lock):
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -62,7 +62,7 @@ model = YOLO('yolov8n.pt')
 threads = []
 for i in range(len(video_files)):
     # Create the thread
-    thread = threading.Thread(target=run_tracker_in_thread, args=(video_files[i], model, i), daemon=True)
+    thread = threading.Thread(target=run_tracker_in_thread, args=(video_files[i], model, i, lock), daemon=True)
     # Add to the array to use later
     threads += thread
     # Start the thread
