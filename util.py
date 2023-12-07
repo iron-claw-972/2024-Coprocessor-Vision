@@ -1,14 +1,15 @@
 import math
 
+# TODO: Change these to the actual camera values
 fov = [62.8, 37.9]
 
 def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
-    hfov = fov[0]*(math.pi/180) 
-    
-    x1, y1, x2, y2 = box.xyxy[0]
 
     if len(box[0]):
+        hfov = fov[0]*(math.pi/180)
+        x1, y1, x2, y2 = box.xyxy[0]
+
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
         cx = bbox_center_coord[0]
@@ -22,6 +23,7 @@ def get_x_offset_deg(box):
         x_offset_deg = math.atan(vx/1)*(180/math.pi)
 
         return float(x_offset_deg)
+    
     return 0
 
 def get_y_offset_deg(box):

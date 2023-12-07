@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import threading
+from threading import Thread
 import cv2
 from ultralytics import YOLO
 import time
@@ -8,9 +8,8 @@ import ntables
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
+# TODO: This should only be the cameras we need, not every possibility
 cameras = [i for i in range(100)]
-
-# lock = threading.Lock()
 
 # Load the model
 model = YOLO('yolov8n.pt')
@@ -32,7 +31,6 @@ def run_tracker_in_thread(cameraname, file_index):
     video = cv2.VideoCapture(cameraname)  # Read the video file
 
     while True:
-        # lock.acquire()
         print(f"Camera: {cameraname}") # For debugging 
         ret, frame = video.read()  # Read the video frames
         start_time = time.time()
@@ -56,7 +54,6 @@ def run_tracker_in_thread(cameraname, file_index):
         # key = cv2.waitKey(1)
         # if key == ord('q'):
         #     break
-        # lock.release()
 
     # Release video sources
     video.release()
@@ -64,7 +61,7 @@ def run_tracker_in_thread(cameraname, file_index):
 threads = []
 for i in range(len(cameras)):
     # Create the thread
-    thread = threading.Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
+    thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
     # Add to the array to use later
     threads.append(thread)
     # Start the thread
