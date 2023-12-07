@@ -8,7 +8,7 @@ distance_topic = table.getDoubleArrayTopic("distance").publish()
 x_angle_offset_topic = table.getDoubleArrayTopic("x_offset").publish()
 y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish()
 object_class_topic = table.getStringArrayTopic("class").publish()
-camera_index_topic = table.getIntArrayTopic("index").publish()
+camera_index_topic = table.getIntegerArrayTopic("index").publish()
 
 distance = []
 x_offset = []
@@ -48,9 +48,12 @@ def add_results(results, index):
     # Add new values to arrays
     for result in results:
         box = result.boxes
+        if not box:
+            continue
         x_offset.append(util.get_x_offset_deg(box))
         y_offset.append(util.get_y_offset_deg(box))
         distance.append(util.get_distance(box))
+        object_class.append(str(box.cls))
         camera_index.append(index)
     # Publish values to NetworkTables
     publish_distance()

@@ -26,10 +26,11 @@ def get_x_offset_deg(box):
 
 def get_y_offset_deg(box):
     #source: Limelight docs(LINK HERE)
-    vfov = fov[1]*(math.pi/180)
-    x1, y1, x2, y2 = box.xyxy[0]
 
     if len(box[0]):
+        vfov = fov[1]*(math.pi/180)
+        x1, y1, x2, y2 = box.xyxy[0]
+
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
         cy = bbox_center_coord[1]
@@ -47,5 +48,5 @@ def get_y_offset_deg(box):
     return 0
  
     
-    def get_distance(box):
-        return 3 # TODO: Add this
+def get_distance(box):
+    return 3 # TODO: Add this

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import threading
 import cv2
 from ultralytics import YOLO
@@ -7,11 +8,14 @@ import ntables
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
-video_files = [0, 1]
+cameras = [i for i in range(100)]
 
-lock = threading.Lock()
+# lock = threading.Lock()
 
-def run_tracker_in_thread(filename, model, file_index, lock):
+# Load the model
+model = YOLO('yolov8n.pt')
+
+def run_tracker_in_thread(cameraname, file_index):
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -19,22 +23,22 @@ def run_tracker_in_thread(filename, model, file_index, lock):
     tracking. The function runs in its own thread for concurrent processing.
 
     Args:
-        filename (str): The path to the video file or the identifier for the webcam/external camera source.
-        model (obj): The YOLOv8 model object.
+        cameraname (int): The identifier for the webcam/external camera source.
         file_index (int): An index to uniquely identify the file being processed, used for display purposes.
 
     Note:
         Press 'q' to quit the video display window.
     """
-    video = cv2.VideoCapture(filename)  # Read the video file
+    video = cv2.VideoCapture(cameraname)  # Read the video file
 
     while True:
-        lock.acquire()
-        print(f"Camera: {filename}") # For debugging 
+        # lock.acquire()
+        print(f"Camera: {cameraname}") # For debugging 
         ret, frame = video.read()  # Read the video frames
         start_time = time.time()
         # Exit the loop if no more frames in either video
         if not ret:
+            print(f"CAMERA {cameraname} EXITING")
             break
 
         # Track objects in frames if available
@@ -47,24 +51,22 @@ def run_tracker_in_thread(filename, model, file_index, lock):
         fps = str(int(1/(end_time-start_time)))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        cv2.imshow(f"Tracking_Stream_{filename}", res_plotted)
+        # cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
-        lock.release()
+        # key = cv2.waitKey(1)
+        # if key == ord('q'):
+        #     break
+        # lock.release()
 
     # Release video sources
     video.release()
 
-# Load the model
-model = YOLO('yolov8n.pt')
 threads = []
-for i in range(len(video_files)):
+for i in range(len(cameras)):
     # Create the thread
-    thread = threading.Thread(target=run_tracker_in_thread, args=(video_files[i], model, i, lock), daemon=True)
+    thread = threading.Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
     # Add to the array to use later
-    threads += thread
+    threads.append(thread)
     # Start the thread
     thread.start()
 
