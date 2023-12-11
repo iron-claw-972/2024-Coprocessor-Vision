@@ -5,7 +5,7 @@ import time
 import pandas as pd
 import util
 import time
-model = YOLO('yolov8n.pt')
+model = YOLO('best.pt')
 
 video = cv2.VideoCapture(0)  # Read the video file
 
