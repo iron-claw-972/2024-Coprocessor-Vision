@@ -1,14 +1,14 @@
 import math
 
 # TODO: Change these to the actual camera values
-fov = [62.8, 37.9]
+fov = [170, 163] #vertical fov calculated from: https://themetalmuncher.github.io/fov-calc/
 
 def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
 
-    if len(box[0]):
+    if len(box):
         hfov = fov[0]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
+        x1, y1, x2, y2 = box
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
@@ -29,9 +29,9 @@ def get_x_offset_deg(box):
 def get_y_offset_deg(box):
     #source: Limelight docs(LINK HERE)
 
-    if len(box[0]):
+    if len(box):
         vfov = fov[1]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
+        x1, y1, x2, y2 = box
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
@@ -52,3 +52,9 @@ def get_y_offset_deg(box):
     
 def get_distance(box):
     return 3 # TODO: Add this
+
+def get_pixel_width(box):
+    x1, y1, x2, y2 = box
+    width = x2-x1
+    return width
+        
