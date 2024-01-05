@@ -1,0 +1,2 @@
+ultralytrics>=8.0.221
+pyntcore>=2023.4.3.0
