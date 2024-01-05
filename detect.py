@@ -9,7 +9,7 @@ import ntables
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
-cameras = [i for i in range(100)]
+cameras = [i for i in range(5)]
 
 # Load the model
 model = YOLO('cone_cube_black_white.pt')
