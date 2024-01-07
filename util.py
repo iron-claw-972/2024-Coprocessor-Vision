@@ -50,11 +50,6 @@ def get_y_offset_deg(box):
     return 0
  
     
-def get_distance(x_offset_deg,y_offset_deg,camera_height):
-    x_offset_rad = x_offset_deg*(math.pi/180)
-    y_offset_rad = y_offset_deg*(math.pi/180)
-
-    distance_ideal = camera_height*math.tan(y_offset_rad)
-    distance_actual = distance_ideal/math.cos(x_offset_rad)
-    
-    return distance_actual
+# TODO: Add tis if we're using it, low pirority
+def get_distance(box):
+    return 1
