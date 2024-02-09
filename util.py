@@ -2,6 +2,8 @@ import math
 
 # TODO: Change these to the actual camera values
 fov = [139.28, 114]
+hres = 1280
+vres = 720
 
 def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
@@ -14,7 +16,7 @@ def get_x_offset_deg(box):
 
         cx = bbox_center_coord[0]
 
-        nx = (cx-320)/320
+        nx = (cx-hres/2-0.5) * (hres/2)
 
         vw = 2*math.tan((hfov/2))
 
@@ -24,7 +26,7 @@ def get_x_offset_deg(box):
 
         return float(x_offset_deg)
     
-    return 0
+    return float(0)
 
 def get_y_offset_deg(box):
     #source: Limelight docs(LINK HERE)
@@ -37,7 +39,7 @@ def get_y_offset_deg(box):
 
         cy = bbox_center_coord[1]
 
-        ny = (cy-320)/320
+        ny = (cy-vres/2-0.5) * (vres/2)
 
         vh = 2*math.tan((vfov/2))
 
@@ -47,7 +49,7 @@ def get_y_offset_deg(box):
 
         return float(y_offset_deg)
     
-    return 0
+    return float(0)
  
     
 # TODO: Add tis if we're using it, low pirority
