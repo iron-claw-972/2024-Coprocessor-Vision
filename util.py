@@ -37,7 +37,7 @@ def get_y_offset_deg(box):
 
         cy = bbox_center_coord[1]
 
-        ny = (cy-320)/320
+        ny = (cy-240)/240
 
         vh = 2*math.tan((vfov/2))
 
@@ -49,7 +49,17 @@ def get_y_offset_deg(box):
     
     return 0
  
-    
+def print_offsets(results):
+    for result in results:
+        box = result.boxes
+        if not box:
+            continue
+        x_offset = get_x_offset_deg(box)
+        y_offset = get_y_offset_deg(box)
+
+        print(f"x: {x_offset}")
+        print(f"y: {y_offset}")
+
 # TODO: Add tis if we're using it, low pirority
 def get_distance(box):
     return 1

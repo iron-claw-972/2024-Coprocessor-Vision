@@ -3,6 +3,7 @@ from threading import Thread
 import cv2
 from ultralytics import YOLO
 import time
+import util
 import ntables
 
 # Define the video files for the trackers
@@ -12,7 +13,7 @@ import ntables
 cameras = [i for i in range(5)]
 
 # Load the model
-model = YOLO('cone_cube_black_white.pt')
+model = YOLO('best.pt')
 
 def run_tracker_in_thread(cameraname, file_index):
     """
@@ -42,6 +43,9 @@ def run_tracker_in_thread(cameraname, file_index):
         # Track objects in frames if available
         results = model.track(frame, persist=True)
         res_plotted = results[0].plot()
+        
+        print(util.print_offsets(results))
+
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)
         end_time = time.time()
@@ -49,11 +53,11 @@ def run_tracker_in_thread(cameraname, file_index):
         fps = str(int(1/(end_time-start_time)))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        # cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
-        # key = cv2.waitKey(1)
-        # if key == ord('q'):
-        #     break
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            break
 
     # Release video sources
     video.release()
