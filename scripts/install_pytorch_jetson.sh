@@ -3,7 +3,7 @@
 echo "THIS SCRIPT IS WIP AND HAS NOT BEEN TESTED!"
 
 REPO_DIR=$(cd .. && pwd)
-PYTORCHBIN_DIR="$REPO_DIR/pytorch_bin"
+PYTORCHBIN_DIR="$REPO_DIR/bin/pytorch_bin"
 
 install_pytorch() {
     cd $REPO_DIR
