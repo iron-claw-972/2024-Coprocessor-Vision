@@ -1,55 +1,67 @@
 import math
-
+import numpy as np
 # TODO: Change these to the actual camera values
-fov = [139.28, 114]
+hfov = 139.28 
+vfov = 114
 
 def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
-        hfov = fov[0]*(math.pi/180)
+        hfov_rad = hfov*(math.pi/180)
+
         x1, y1, x2, y2 = box.xyxy[0]
-
-        bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
-
+        bbox_center_coord = np.array([(x1+x2)/2,(y1+y2)/2],np.float32)
         cx = bbox_center_coord[0]
 
-        nx = (cx-320)/320
+        nx = (1/319.5) * (cx - 319.5)
+        
+        vpw = 2.0*math.tan(hfov_rad/2)
 
-        vw = 2*math.tan((hfov/2))
+        x = vpw/2 * nx
 
-        vx = vw/2*nx
+        x_offset_deg = math.atan(x)
 
-        x_offset_deg = math.atan(vx/1)*(180/math.pi)
-
-        return float(x_offset_deg)
+        return float(x_offset_deg * (180/math.pi))
     
-    return 0
+    return float(0)
 
 def get_y_offset_deg(box):
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
-        vfov = fov[1]*(math.pi/180)
+        vfov_rad = vfov*(math.pi/180)
+
         x1, y1, x2, y2 = box.xyxy[0]
-
-        bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
-
+        bbox_center_coord = np.array([(x1+x2)/2,(y1+y2)/2],np.float32)
         cy = bbox_center_coord[1]
 
-        ny = (cy-320)/320
+        ny = (1/239.5) * (cy - 239.5)
+        
+        vph = 2.0*math.tan(vfov_rad/2)
 
-        vh = 2*math.tan((vfov/2))
+        y = vph/2 * ny
 
-        vy = vh/2*ny
+        y_offset_deg = math.atan(y)
 
-        y_offset_deg = math.atan(vy/1)*(180/math.pi)
-
-        return float(y_offset_deg)
+        return float(y_offset_deg * (180/math.pi))
     
-    return 0
+    return float(0)   
  
-    
+def print_offsets(results):
+    for result in results:
+        box = result.boxes
+        if not box:
+            continue
+
+        x1, y1, x2, y2 = box.xyxy[0]
+
+        x_offset = get_x_offset_deg(box)
+        y_offset = get_y_offset_deg(box)
+
+        print(f"x: {x_offset}")
+        print(f"y: {y_offset}")
+
 # TODO: Add tis if we're using it, low pirority
 def get_distance(box):
     return 1
