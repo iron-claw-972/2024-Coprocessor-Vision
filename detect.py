@@ -12,7 +12,7 @@ import ntables
 cameras = [i for i in range(5)]
 
 # Load the model
-model = YOLO('cone_cube_black_white.pt')
+model = YOLO('best.pt')
 
 def run_tracker_in_thread(cameraname, file_index):
     """
