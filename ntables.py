@@ -3,14 +3,14 @@ import util
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
-nt_options = ntcore.PubSubOptions(sendAll=True)
+pub_sub_options = ntcore.PubSubOptions(sendAll=True, periodic=0.05)
 
 table = nt_inst.getTable("object_detection")
-distance_topic = table.getDoubleArrayTopic("distance").publish(options=nt_options)
-x_angle_offset_topic = table.getDoubleArrayTopic("x_offset").publish(options=nt_options)
-y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=nt_options)
-object_class_topic = table.getStringArrayTopic("class").publish(options=nt_options)
-camera_index_topic = table.getIntegerArrayTopic("index").publish(options=nt_options)
+distance_topic = table.getDoubleArrayTopic("distance").publish(options=pub_sub_options)
+x_angle_offset_topic = table.getDoubleArrayTopic("x_offset").publish(options=pub_sub_options)
+y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=pub_sub_options)
+object_class_topic = table.getStringArrayTopic("class").publish(options=pub_sub_options)
+camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub_options)
 
 distance = []
 x_offset = []
