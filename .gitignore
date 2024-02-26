@@ -1,1 +1,3 @@
 bin/
+# Default yolo model
+yolov8n.pt
