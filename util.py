@@ -1,7 +1,7 @@
 import math
 
 # TODO: Change these to the actual camera values
-fov = [139.28, 114]
+fov = [70, 43.75]
 
 def get_x_offset_deg(box):
     #source: Limelight docs(LINK HERE)
