@@ -1,4 +1,6 @@
 lapx>=0.5.2
-pyntcore>=2023.4.3.0
 ultralytics>=8.0.221
+
+--extra-index-url https://wpilib.jfrog.io/artifactory/api/pypi/wpilib-python-release-2024/simple robotpy
+pyntcore>=2023.4.3.0
 
