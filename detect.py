@@ -12,7 +12,7 @@ import ntables
 cameras = [i for i in range(5)]
 
 # Load the model
-model = YOLO('best.pt')
+model = YOLO('models/best.pt')
 
 def run_tracker_in_thread(cameraname, file_index):
     """
@@ -41,6 +41,7 @@ def run_tracker_in_thread(cameraname, file_index):
 
         # Track objects in frames if available
         results = model.track(frame, persist=True)
+        print(type(results))
         res_plotted = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)

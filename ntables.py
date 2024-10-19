@@ -12,31 +12,31 @@ y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=pub
 object_class_topic = table.getStringArrayTopic("class").publish(options=pub_sub_options)
 camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub_options)
 
-distance = []
-x_offset = []
-y_offset = []
-object_class = []
-camera_index = []
+distance: list[float] = []
+x_offset: list[float] = []
+y_offset: list[float] = []
+object_class: list[str] = []
+camera_index: list[int] = []
 
 nt_inst.startClient4("Coprocessor")
 nt_inst.setServerTeam(972)
 
-def publish_distance():
+def publish_distance() -> None:
     distance_topic.set(distance)
 
-def publish_x_angle_offset():
+def publish_x_angle_offset() -> None:
     x_angle_offset_topic.set(x_offset)
 
-def publish_y_angle_offset():
+def publish_y_angle_offset() -> None:
     y_angle_offset_topic.set(y_offset)
 
-def publish_class():
+def publish_class() -> None:
     object_class_topic.set(object_class)
 
-def publish_camera_index():
+def publish_camera_index() -> None:
     camera_index_topic.set(camera_index)
 
-def add_results(results, index):
+def add_results(results, index) -> None:
     # Remove old values from the same camera, do not change values from other cameras
     i = len(camera_index) - 1
     while i >= 0:
