@@ -49,11 +49,11 @@ def run_tracker_in_thread(cameraname, file_index):
         fps = str(int(1/(end_time-start_time)))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        # cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
-        # key = cv2.waitKey(1)
-        # if key == ord('q'):
-        #     break
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            break
 
     # Release video sources
     video.release()
@@ -73,3 +73,4 @@ for thread in threads:
 
 # Clean up and close windows
 cv2.destroyAllWindows()
+
