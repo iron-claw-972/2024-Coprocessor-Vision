@@ -29,11 +29,20 @@ def run_tracker_in_thread(cameraname, file_index):
         Press 'q' to quit the video display window.
     """
     video = cv2.VideoCapture(cameraname)  # Read the video file
-    video.set(cv2.CAP_PROP_BUFFERSIZE, 0)
+    #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
 
     while True:
         print(f"Camera: {cameraname}") # For debugging 
-        ret, frame = video.read()  # Read the video frames
+        
+        while True:
+            before_read = time.time()
+            ret, frame = video.read()  # Read the video frames
+            after_read = time.time()
+
+            # if the frame is read too quickly, it's probably from the buffer
+            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
+                break
+
         start_time = time.time()
         # Exit the loop if no more frames in either video
         if not ret:
