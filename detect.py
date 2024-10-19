@@ -29,6 +29,7 @@ def run_tracker_in_thread(cameraname, file_index):
         Press 'q' to quit the video display window.
     """
     video = cv2.VideoCapture(cameraname)  # Read the video file
+    video.set(cv2.CAP_PROP_BUFFERSIZE, 0)
 
     while True:
         print(f"Camera: {cameraname}") # For debugging 
