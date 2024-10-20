@@ -1,5 +1,6 @@
 import ntcore
 import util
+from ultralytics import Results # type: ignore
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
@@ -36,7 +37,7 @@ def publish_class() -> None:
 def publish_camera_index() -> None:
     camera_index_topic.set(camera_index)
 
-def add_results(results, index) -> None:
+def add_results(results: list[Results], index: int) -> None:
     # Remove old values from the same camera, do not change values from other cameras
     i = len(camera_index) - 1
     while i >= 0:

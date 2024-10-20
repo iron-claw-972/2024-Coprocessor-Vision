@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from threading import Thread
 import cv2
-from ultralytics import YOLO
+import numpy as np
+from ultralytics import YOLO, Results # type: ignore
 import time
 import ntables
 
@@ -9,12 +10,12 @@ import ntables
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
-cameras = [i for i in range(5)]
+cameras: list[int] = [i for i in range(5)]
 
 # Load the model
 model = YOLO('models/best.pt')
 
-def run_tracker_in_thread(cameraname, file_index):
+def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -28,24 +29,25 @@ def run_tracker_in_thread(cameraname, file_index):
     Note:
         Press 'q' to quit the video display window.
     """
-    video = cv2.VideoCapture(cameraname)  # Read the video file
+    video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
 
     while True:
         print(f"Camera: {cameraname}") # For debugging 
+        ret: bool
+        frame: np.ndarray
         ret, frame = video.read()  # Read the video frames
-        start_time = time.time()
+        start_time: float = time.time()
         # Exit the loop if no more frames in either video
         if not ret:
             print(f"CAMERA {cameraname} EXITING")
             break
 
         # Track objects in frames if available
-        results = model.track(frame, persist=True)
-        print(type(results))
-        res_plotted = results[0].plot()
+        results: list[Results] = model.track(frame, persist=True)
+        res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)
-        end_time = time.time()
+        end_time: float = time.time()
 
         fps = str(int(1/(end_time-start_time)))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
@@ -59,7 +61,7 @@ def run_tracker_in_thread(cameraname, file_index):
     # Release video sources
     video.release()
 
-threads = []
+threads: list[Thread] = []
 for i in range(len(cameras)):
     # Create the thread
     thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
@@ -74,3 +76,4 @@ for thread in threads:
 
 # Clean up and close windows
 cv2.destroyAllWindows()
+
