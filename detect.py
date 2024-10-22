@@ -2,9 +2,14 @@
 from threading import Thread
 import cv2
 import numpy as np
-from ultralytics import YOLO, Results # type: ignore
+from ultralytics import YOLO # type: ignore
+from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
+
+# ANSI colors
+COLOR_BOLD = "\033[1m"
+COLOR_RESET = "\033[0m"
 
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
@@ -14,6 +19,10 @@ cameras: list[int] = [i for i in range(5)]
 
 # Load the model
 model = YOLO('models/best.pt')
+
+# exit gracefully on ^C
+is_interrupted: bool = False
+
 
 def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     """
@@ -38,7 +47,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         ret, frame = video.read()  # Read the video frames
         start_time: float = time.time()
         # Exit the loop if no more frames in either video
-        if not ret:
+        if (not ret) or is_interrupted:
             print(f"CAMERA {cameraname} EXITING")
             break
 
@@ -49,14 +58,12 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         ntables.add_results(results, file_index)
         end_time: float = time.time()
 
-        fps = str(int(1/(end_time-start_time)))
+        fps = str(round(1/(end_time-start_time), 2))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        # cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
-        # key = cv2.waitKey(1)
-        # if key == ord('q'):
-        #     break
+        key = cv2.waitKey(1)
 
     # Release video sources
     video.release()
@@ -64,11 +71,19 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
 threads: list[Thread] = []
 for i in range(len(cameras)):
     # Create the thread
+    # daemon=True makes it shut down if something goes wrong
     thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
     # Add to the array to use later
     threads.append(thread)
     # Start the thread
     thread.start()
+
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
+    is_interrupted = True
 
 # Wait for the tracker threads to finish
 for thread in threads:

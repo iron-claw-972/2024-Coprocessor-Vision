@@ -1,5 +1,5 @@
 import math
-from ultralytics import Boxes # type: ignore
+from ultralytics.engine.results import Boxes # type: ignore
 
 # TODO: Change these to the actual camera values
 fov = [70, 43.75]

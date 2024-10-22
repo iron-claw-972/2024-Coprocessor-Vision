@@ -1,6 +1,6 @@
 import ntcore
 import util
-from ultralytics import Results # type: ignore
+from ultralytics.engine.results import Results # type: ignore
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
@@ -13,7 +13,7 @@ y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=pub
 object_class_topic = table.getStringArrayTopic("class").publish(options=pub_sub_options)
 camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub_options)
 
-distance: list[float] = []
+#distance: list[float] = []
 x_offset: list[float] = []
 y_offset: list[float] = []
 object_class: list[str] = []
@@ -44,7 +44,7 @@ def add_results(results: list[Results], index: int) -> None:
         if camera_index[i] == index:
             x_offset.pop(i)
             y_offset.pop(i)
-            distance.pop(i)
+            #distance.pop(i)
             object_class.pop(i)
             camera_index.pop(i)
         i -= 1
@@ -55,11 +55,11 @@ def add_results(results: list[Results], index: int) -> None:
             continue
         x_offset.append(util.get_x_offset_deg(box))
         y_offset.append(util.get_y_offset_deg(box))
-        distance.append(util.get_distance(box))
+        #distance.append(util.get_distance(box))
         object_class.append(str(box.cls))
         camera_index.append(index)
     # Publish values to NetworkTables
-    publish_distance()
+    #publish_distance()
     publish_x_angle_offset()
     publish_y_angle_offset()
     publish_class()
