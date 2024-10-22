@@ -1,9 +1,10 @@
 import math
+from ultralytics.engine.results import Boxes # type: ignore
 
 # TODO: Change these to the actual camera values
 fov = [70, 43.75]
 
-def get_x_offset_deg(box):
+def get_x_offset_deg(box: Boxes) -> float:
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
@@ -26,7 +27,7 @@ def get_x_offset_deg(box):
     
     return 0
 
-def get_y_offset_deg(box):
+def get_y_offset_deg(box: Boxes) -> float:
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
@@ -51,5 +52,6 @@ def get_y_offset_deg(box):
  
     
 # TODO: Add tis if we're using it, low pirority
-def get_distance(box):
-    return 1
+def get_distance(box: Boxes) -> float:
+    raise NotImplementedError("get_distance doesn't exist yet -- please write it!")
+

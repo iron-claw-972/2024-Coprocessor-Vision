@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
 from threading import Thread
 import cv2
-from ultralytics import YOLO
+import numpy as np
+from ultralytics import YOLO # type: ignore
+from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
+
+# ANSI colors
+COLOR_BOLD = "\033[1m"
+COLOR_RESET = "\033[0m"
 
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
-cameras = [i for i in range(5)]
+cameras: list[int] = [i for i in range(5)]
 
 # Load the model
-model = YOLO('best.pt')
+model = YOLO('models/best.pt')
 
-def run_tracker_in_thread(cameraname, file_index):
+# exit gracefully on ^C
+is_interrupted: bool = False
+
+
+def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -43,39 +53,48 @@ def run_tracker_in_thread(cameraname, file_index):
             if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
                 break
 
-        start_time = time.time()
+        ret: bool
+        frame: np.ndarray
+        ret, frame = video.read()  # Read the video frames
+        start_time: float = time.time()
         # Exit the loop if no more frames in either video
-        if not ret:
+        if (not ret) or is_interrupted:
             print(f"CAMERA {cameraname} EXITING")
             break
 
         # Track objects in frames if available
-        results = model.track(frame, persist=True)
-        res_plotted = results[0].plot()
+        results: list[Results] = model.track(frame, persist=True)
+        res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)
-        end_time = time.time()
+        end_time: float = time.time()
 
-        fps = str(int(1/(end_time-start_time)))
+        fps = str(round(1/(end_time-start_time), 2))
         cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
         cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
         key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
 
     # Release video sources
     video.release()
 
-threads = []
+threads: list[Thread] = []
 for i in range(len(cameras)):
     # Create the thread
+    # daemon=True makes it shut down if something goes wrong
     thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
     # Add to the array to use later
     threads.append(thread)
     # Start the thread
     thread.start()
+
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
+    is_interrupted = True
 
 # Wait for the tracker threads to finish
 for thread in threads:
