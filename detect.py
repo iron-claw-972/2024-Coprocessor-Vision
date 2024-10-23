@@ -46,17 +46,32 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         Press 'q' to quit the video display window.
     """
     video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
+    #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
 
     while True:
         print(f"Camera: {cameraname}") # For debugging 
-        ret: bool
-        frame: np.ndarray
-        ret, frame = video.read()  # Read the video frames
-        start_time: float = time.time()
+        
+        while True:
+            before_read: float = time.time()
+            ret: bool
+            frame: np.ndarray
+            ret, frame = video.read()  # Read the video frames
+            after_read: float = time.time()
+
+            # exit if no frames remain
+            if not ret:
+                break
+
+            # if the frame is read too quickly, it's probably from the buffer
+            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
+                break
+
         # Exit the loop if no more frames in either video
         if (not ret) or is_interrupted:
             print(f"CAMERA {cameraname} EXITING")
             break
+
+        start_time: float = time.time()
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True)
