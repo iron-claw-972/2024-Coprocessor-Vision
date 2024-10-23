@@ -23,7 +23,8 @@ nt_inst.startClient4("Coprocessor")
 nt_inst.setServerTeam(972)
 
 def publish_distance() -> None:
-    distance_topic.set(distance)
+    raise NotImplementedError("distance is not not implemented yet")
+    #distance_topic.set(distance)
 
 def publish_x_angle_offset() -> None:
     x_angle_offset_topic.set(x_offset)

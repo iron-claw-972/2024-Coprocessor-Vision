@@ -6,6 +6,7 @@ from ultralytics import YOLO # type: ignore
 from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
+import signal
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -16,6 +17,12 @@ COLOR_RESET = "\033[0m"
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
 cameras: list[int] = [i for i in range(5)]
+
+def handle_signal(signalnum, stack_frame):
+    raise SystemExit()
+
+# handle SIGTERM nicely
+signal.signal(signal.SIGTERM, handle_signal)
 
 # Load the model
 model = YOLO('models/best.pt')
@@ -81,7 +88,7 @@ for i in range(len(cameras)):
 try:
     while True:
         time.sleep(1)
-except KeyboardInterrupt:
+except (KeyboardInterrupt, SystemExit) as e:
     print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
     is_interrupted = True
 
