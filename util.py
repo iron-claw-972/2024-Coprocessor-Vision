@@ -2,7 +2,8 @@ import math
 from ultralytics.engine.results import Boxes # type: ignore
 
 # TODO: Change these to the actual camera values
-fov = [70, 43.75]
+# fov = [70, 43.75] # Arducam
+fov = [59.703, 33.583] # Microsoft lifecam or other cameras with diagonal FOV of 68.5 degrees and 1280x720 resolution
 
 def get_x_offset_deg(box: Boxes) -> float:
     #source: Limelight docs(LINK HERE)
