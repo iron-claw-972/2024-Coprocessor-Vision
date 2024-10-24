@@ -4,7 +4,7 @@ from ultralytics.engine.results import Results # type: ignore
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
-pub_sub_options = ntcore.PubSubOptions(sendAll=True, periodic=0.05)
+pub_sub_options = ntcore.PubSubOptions(sendAll=True, periodic=0.02)
 
 table = nt_inst.getTable("object_detection")
 distance_topic = table.getDoubleArrayTopic("distance").publish(options=pub_sub_options)
