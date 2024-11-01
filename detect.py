@@ -7,6 +7,7 @@ from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
 import signal
+import torch
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -29,6 +30,8 @@ model = YOLO('models/best.pt')
 
 # exit gracefully on ^C
 is_interrupted: bool = False
+enable_enable_gui: bool = True
+enable_gui: bool = enable_enable_gui
 
 
 def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
@@ -48,9 +51,14 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
     #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
 
+    catch_up: int = 0
+
     while True:
         print(f"Camera: {cameraname}") # For debugging 
         
+        catch_up += 1
+        catch_up %= 100
+
         while True:
             before_read: float = time.time()
             ret: bool
@@ -63,7 +71,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
                 break
 
             # if the frame is read too quickly, it's probably from the buffer
-            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
+            if catch_up == 0 or after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
                 break
 
         # Exit the loop if no more frames in either video
@@ -79,16 +87,23 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)
         end_time: float = time.time()
-
+	
         fps = str(round(1/(end_time-start_time), 2))
-        cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+        print(f"x offset: {ntables.x_offset}", f"y offset: {ntables.y_offset}", f"fps: {fps}", sep='\n')
 
-        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+        if enable_gui:
+            cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        key = cv2.waitKey(1)
+            cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+
+            key = cv2.waitKey(1)
 
     # Release video sources
     video.release()
+
+    if enable_gui:
+        # Clean up and close windows
+        cv2.destroyAllWindows()
 
 threads: list[Thread] = []
 for i in range(len(cameras)):
@@ -103,6 +118,13 @@ for i in range(len(cameras)):
 try:
     while True:
         time.sleep(1)
+        if (not enable_gui) and enable_enable_gui:
+            alive_threads: int = 0
+            for thread in threads:
+                alive_threads += 1 if thread.is_alive() else 0
+            if alive_threads == 1:
+                print(COLOR_BOLD, "ENABLING GUI", COLOR_RESET, sep="")
+                enable_gui = True
 except (KeyboardInterrupt, SystemExit) as e:
     print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
     is_interrupted = True
@@ -110,7 +132,4 @@ except (KeyboardInterrupt, SystemExit) as e:
 # Wait for the tracker threads to finish
 for thread in threads:
     thread.join()
-
-# Clean up and close windows
-cv2.destroyAllWindows()
 
