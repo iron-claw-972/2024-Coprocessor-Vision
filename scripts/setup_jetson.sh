@@ -111,7 +111,7 @@ runCommand python3 -m venv venv
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 runCommand pip install -r requirements.txt
-runCommand pip uninstall torch # we'll install that later
+runCommand pip uninstall --yes torch # we'll install that manually
 
 echo "CLONING PYTORCH"
 cd "$DATA_DIR"
