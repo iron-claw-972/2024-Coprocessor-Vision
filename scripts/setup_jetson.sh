@@ -67,6 +67,18 @@ function runCommand() {
 	fi
 }
 
+# same as runCommand but configurable message
+function assertCommand() {
+	echo -n "Checking $1... "
+	echo "**Running \"${*:2}\" in \"$(pwd)\"**" > "$LOG_FILE"
+	if "${@:2}" &>>"$LOG_FILE"; then
+		echo "Done"
+	else
+		echo "Failed -- check log for more info"
+		exit 1
+	fi
+}
+
 function runAsRoot() {
 	echo -n "Running \"$*\"... "
 	echo "**Running \"$*\" in \"$(pwd)\" as root**" > "$LOG_FILE"
@@ -111,7 +123,7 @@ runCommand python3 -m venv venv
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 runCommand pip install -r requirements.txt
-runCommand pip uninstall --yes torch # we'll install that manually
+runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
 echo "CLONING PYTORCH"
 cd "$DATA_DIR"
@@ -122,6 +134,13 @@ cd pytorch
 runAsRoot apt-get install build-essential cmake ninja
 runCommand pip install -r requirements.txt
 runCommand python3 setup.py --install
+assertCommand "pytorch install" python3 -c <<EOF
+import torch
+if torch.cuda.device_count() == 1:
+	exit(0)
+else:
+	exit(1)
+EOF
 
 echo "CLONING TORCHVISION"
 cd "$DATA_DIR"
@@ -131,6 +150,10 @@ echo "BUILDING TORCHVISION"
 cd vision
 runCommand pip install -r requirements.txt
 runCommand python3 setup.py --install
+assertCommand "torchvision install" python3 -c <<EOF
+import torch
+import torchvision
+EOF
 
 echo "SETUP COMPLETE"
 echo "Please restart now."
