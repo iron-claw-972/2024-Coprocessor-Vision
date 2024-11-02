@@ -132,6 +132,7 @@ cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 echo "BUILDING PYTORCH"
 cd pytorch
 runAsRoot apt-get install build-essential cmake ninja-build
+runCommand pip install -r requirements.txt
 runAsRoot python3 setup.py bdist_wheel
 runCommand pip install ./dist/*.whl
 assertCommand "pytorch install" python3 -c <<EOF
