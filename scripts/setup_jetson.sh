@@ -93,7 +93,7 @@ function runAsRoot() {
 
 function cloneIf() {
 	echo "**Cloning \"$1\" to dir \"$2\"**" > "$LOG_FILE"
-	echo -n "Cloning \"$1\"..."
+	echo -n "Cloning \"$1\"... "
 	if git -C "$2" pull &>>"$LOG_FILE"; then
 		echo "Skipped"
 	else
@@ -131,7 +131,7 @@ cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 
 echo "BUILDING PYTORCH"
 cd pytorch
-runAsRoot apt-get install build-essential cmake ninja
+runAsRoot apt-get install build-essential cmake ninja-build
 runAsRoot python3 setup.py bdist_wheel
 runCommand pip install ./dist/*.whl
 assertCommand "pytorch install" python3 -c <<EOF
