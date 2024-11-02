@@ -119,10 +119,12 @@ echo "INSTALLING JETPACK"
 runAsRoot apt-get install -y nvidia-jetpack
 
 echo "RUNNING PIP COMMANDS"
+# TODO: don't recreate env if it already exists
 runCommand python3 -m venv venv
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 runCommand pip install -r requirements.txt
+runCommand pip install setuptools
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
 echo "CLONING PYTORCH"
