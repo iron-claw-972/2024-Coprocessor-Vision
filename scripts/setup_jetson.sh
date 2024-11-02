@@ -39,7 +39,7 @@ else
 fi
 
 REPOSITORY="$(git rev-parse --show-toplevel)"
-DATA_DIR="$HOME/Downloads/autosetup"
+DATA_DIR="$HOME/Downloads"
 LOG_FILE="$REPOSITORY/setup.log"
 
 mkdir -p "$DATA_DIR"
@@ -71,13 +71,31 @@ function runAsRoot() {
 	echo -n "Running \"$*\"... "
 	echo "**Running \"$*\" in \"$(pwd)\" as root**" > "$LOG_FILE"
 	# shellcheck disable=SC2024
-	if sudo <<<"$PASSWORD" -S "$@" &>>"$LOG_FILE"; then
+	if sudo <<<"$PASSWORD" -E -S "$@" &>>"$LOG_FILE"; then
 		echo "Done"
 	else
 		echo "Failed -- check log for more info"
 		exit 1
 	fi
 }
+
+function cloneIf() {
+	echo "**Cloning \"$1\" to dir \"$2\"**" > "$LOG_FILE"
+	echo -n "Cloning \"$1\"..."
+	if git -C "$2" pull &>>"$LOG_FILE"; then
+		echo "Skipped"
+	else
+		runCommand git clone --depth 1 --shallow-submodules --recursive "$1" "$2"
+		echo "Done"
+	fi
+}
+
+export USE_PRIORITIZED_TEXT_FOR_LD=1
+# TODO: check both of these locations
+export CMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc/"
+export CUDA_HOME="/usr/local/cuda"
+export MAX_JOBS=2 # for memory reasons
+#export FORCE_CUDA=1
 
 cd "$REPOSITORY"
 
@@ -96,10 +114,9 @@ runCommand pip install -r requirements.txt
 
 echo "CLONING PYTORCH"
 cd "$DATA_DIR"
-runCommand git clone --recursive "https://github.com/pytorch/pytorch.git"
+cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 
 echo "BUILDING PYTORCH"
-# TODO: export required env vars here
 cd pytorch
 runAsRoot apt-get install build-essential cmake ninja
 runCommand pip install -r requirements.txt
@@ -107,7 +124,7 @@ runCommand python3 setup.py --install
 
 echo "CLONING TORCHVISION"
 cd "$DATA_DIR"
-runCommand git clone --recursive "https://github.com/pytorch/vision.git"
+cloneIf "https://github.com/pytorch/vision.git" vision
 
 echo "BUILDING TORCHVISION"
 cd vision
