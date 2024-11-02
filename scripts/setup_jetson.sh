@@ -132,8 +132,8 @@ cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 echo "BUILDING PYTORCH"
 cd pytorch
 runAsRoot apt-get install build-essential cmake ninja
-runCommand pip install -r requirements.txt
-runCommand python3 setup.py --install
+runAsRoot python3 setup.py bdist_wheel
+runCommand pip install ./dist/*.whl
 assertCommand "pytorch install" python3 -c <<EOF
 import torch
 if torch.cuda.device_count() == 1:
@@ -149,7 +149,8 @@ cloneIf "https://github.com/pytorch/vision.git" vision
 echo "BUILDING TORCHVISION"
 cd vision
 runCommand pip install -r requirements.txt
-runCommand python3 setup.py --install
+runCommand python3 setup.py bdist_wheel
+runCommand pip install ./dist/*.whl
 assertCommand "torchvision install" python3 -c <<EOF
 import torch
 import torchvision
