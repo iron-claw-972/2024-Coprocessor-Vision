@@ -58,7 +58,7 @@ echo "Logging to $LOG_FILE, please use that for detailed info"
 
 function runCommand() {
 	echo -n "Running \"$*\"... "
-	echo "**Running \"$*\" in \"$(pwd)\"**" > "$LOG_FILE"
+	echo "**Running \"$*\" in \"$(pwd)\"**" >> "$LOG_FILE"
 	if "$@" &>>"$LOG_FILE"; then
 		echo "Done"
 	else
@@ -70,7 +70,7 @@ function runCommand() {
 # same as runCommand but configurable message
 function assertCommand() {
 	echo -n "Checking $1... "
-	echo "**Running \"${*:2}\" in \"$(pwd)\"**" > "$LOG_FILE"
+	echo "**Running \"${*:2}\" in \"$(pwd)\"**" >> "$LOG_FILE"
 	if "${@:2}" &>>"$LOG_FILE"; then
 		echo "Done"
 	else
@@ -81,7 +81,7 @@ function assertCommand() {
 
 function runAsRoot() {
 	echo -n "Running \"$*\"... "
-	echo "**Running \"$*\" in \"$(pwd)\" as root**" > "$LOG_FILE"
+	echo "**Running \"$*\" in \"$(pwd)\" as root**" >> "$LOG_FILE"
 	# shellcheck disable=SC2024
 	if sudo <<<"$PASSWORD" -E -S "$@" &>>"$LOG_FILE"; then
 		echo "Done"
@@ -92,7 +92,7 @@ function runAsRoot() {
 }
 
 function cloneIf() {
-	echo "**Cloning \"$1\" to dir \"$2\"**" > "$LOG_FILE"
+	echo "**Cloning \"$1\" to dir \"$2\"**" >> "$LOG_FILE"
 	echo -n "Cloning \"$1\"... "
 	if git -C "$2" pull &>>"$LOG_FILE"; then
 		echo "Skipped"
