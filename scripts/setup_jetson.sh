@@ -2,7 +2,13 @@
 
 set -euo pipefail
 
-echo "THIS SCRIPT IS WIP AND HAS NOT BEEN TESTED!"
+function yell() {
+	echo -e "\e[1m$*\e[0m"
+}
+
+yell "THIS SCRIPT IS WIP AND HAS NOT BEEN TESTED!"
+echo "Only run this script on the coprocessor."
+yell "DO NOT RUN THIS SCRIPT ON YOUR LAPTOP"
 read -rp "Are you sure you want to continue? [yN]
 >" toContinue
 
@@ -42,23 +48,30 @@ REPOSITORY="$(git rev-parse --show-toplevel)"
 DATA_DIR="$HOME/Downloads"
 LOG_FILE="$REPOSITORY/setup.log"
 
-mkdir -p "$DATA_DIR"
-
+# just in case
 if [[ $REPOSITORY == "" ]]; then
 	echo "Repository is null, exiting"
 	exit 1
 fi
 
+# I'm really paranoid about this
 if [[ $DATA_DIR == "" ]]; then
-	echo "Temp dir is null, exiting"
+	echo "Data dir is null, exiting"
 	exit 1
+fi
+
+mkdir -p "$DATA_DIR"
+
+if [[ -f "$LOG_FILE" ]]; then
+	echo "Overwriting $LOG_FILE"
+	echo -n "" > "$LOG_FILE"
 fi
 
 echo "Logging to $LOG_FILE, please use that for detailed info"
 
 function runCommand() {
 	echo -n "Running \"$*\"... "
-	echo "**Running \"$*\" in \"$(pwd)\"**" >> "$LOG_FILE"
+	yell "Running \"$*\" in \"$(pwd)\"" >> "$LOG_FILE"
 	if "$@" &>>"$LOG_FILE"; then
 		echo "Done"
 	else
@@ -70,18 +83,18 @@ function runCommand() {
 # same as runCommand but configurable message
 function assertCommand() {
 	echo -n "Checking $1... "
-	echo "**Running \"${*:2}\" in \"$(pwd)\"**" >> "$LOG_FILE"
+	yell "Running \"${*:2}\" in \"$(pwd)\"" >> "$LOG_FILE"
 	if "${@:2}" &>>"$LOG_FILE"; then
 		echo "Done"
 	else
-		echo "Failed -- check log for more info"
+		echo "Failed"
 		exit 1
 	fi
 }
 
 function runAsRoot() {
 	echo -n "Running \"$*\"... "
-	echo "**Running \"$*\" in \"$(pwd)\" as root**" >> "$LOG_FILE"
+	yell "Running \"$*\" in \"$(pwd)\" as root" >> "$LOG_FILE"
 	# shellcheck disable=SC2024
 	if sudo <<<"$PASSWORD" -E -S "$@" &>>"$LOG_FILE"; then
 		echo "Done"
@@ -92,33 +105,34 @@ function runAsRoot() {
 }
 
 function cloneIf() {
-	echo "**Cloning \"$1\" to dir \"$2\"**" >> "$LOG_FILE"
+	yell "Cloning \"$1\" to dir \"$2\"" >> "$LOG_FILE"
 	echo -n "Cloning \"$1\"... "
 	if git -C "$2" pull &>>"$LOG_FILE"; then
 		echo "Skipped"
 	else
-		runCommand git clone --depth 1 --shallow-submodules --recursive "$1" "$2"
+		runCommand git clone --depth 1 --shallow-submodules --recursive "$1" "$2" &>/dev/null
 		echo "Done"
 	fi
 }
 
 export USE_PRIORITIZED_TEXT_FOR_LD=1
-# TODO: check both of these locations
 export CMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc/"
+assertCommand "if cuda compiler exists" [ -f "$CMAKE_CUDA_COMPILER" ]
 export CUDA_HOME="/usr/local/cuda"
+assertCommand "if cuda home exists" [ -d "$CUDA_HOME" ]
 export MAX_JOBS=2 # for memory reasons
 #export FORCE_CUDA=1
 
 cd "$REPOSITORY"
 
-echo "RUNNING SYSTEM UPGRADE"
+yell "RUNNING SYSTEM UPGRADE"
 runAsRoot apt-get update -y
 runAsRoot apt-get upgrade -y
 
-echo "INSTALLING JETPACK"
+yell "INSTALLING JETPACK"
 runAsRoot apt-get install -y nvidia-jetpack
 
-echo "RUNNING PIP COMMANDS"
+yell "RUNNING PIP COMMANDS"
 if [[ -f ./venv/bin/activate ]]; then
 	echo "venv already exists -- skipping creation"
 else
@@ -129,11 +143,11 @@ source ./venv/bin/activate
 runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
-echo "CLONING PYTORCH"
+yell "CLONING PYTORCH"
 cd "$DATA_DIR"
 cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 
-echo "BUILDING PYTORCH"
+yell "BUILDING PYTORCH"
 cd pytorch
 runAsRoot apt-get install build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
@@ -148,11 +162,11 @@ else:
 	exit(1)
 EOF
 
-echo "CLONING TORCHVISION"
+yell "CLONING TORCHVISION"
 cd "$DATA_DIR"
 cloneIf "https://github.com/pytorch/vision.git" vision
 
-echo "BUILDING TORCHVISION"
+yell "BUILDING TORCHVISION"
 cd vision
 runCommand pip install -r requirements.txt
 runCommand python3 setup.py bdist_wheel
@@ -162,6 +176,6 @@ import torch
 import torchvision
 EOF
 
-echo "SETUP COMPLETE"
+yell "SETUP COMPLETE"
 echo "Please restart now."
 
