@@ -119,8 +119,11 @@ echo "INSTALLING JETPACK"
 runAsRoot apt-get install -y nvidia-jetpack
 
 echo "RUNNING PIP COMMANDS"
-# TODO: don't recreate env if it already exists
-runCommand python3 -m venv venv
+if [[ -f ./venv/bin/activate ]]; then
+	echo "venv already exists -- skipping creation"
+else
+	runCommand python3 -m venv venv
+fi
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 runCommand pip install -r requirements.txt
