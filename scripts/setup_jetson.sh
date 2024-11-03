@@ -124,7 +124,6 @@ runCommand python3 -m venv venv
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 runCommand pip install -r requirements.txt
-runCommand pip install setuptools
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
 echo "CLONING PYTORCH"
@@ -133,8 +132,9 @@ cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 
 echo "BUILDING PYTORCH"
 cd pytorch
-runAsRoot apt-get install build-essential cmake ninja-build
+runAsRoot apt-get install build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
+runAsRoot pip install setuptools # workaround https://github.com/pytorch/pytorch/issues/129304
 runAsRoot python3 setup.py bdist_wheel
 runCommand pip install ./dist/*.whl
 assertCommand "pytorch install" python3 -c <<EOF
