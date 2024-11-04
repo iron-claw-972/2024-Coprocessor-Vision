@@ -30,8 +30,7 @@ model = YOLO('models/best.pt')
 
 # exit gracefully on ^C
 is_interrupted: bool = False
-enable_enable_gui: bool = True
-enable_gui: bool = enable_enable_gui
+enable_gui: bool = True
 
 
 def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
@@ -57,7 +56,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         print(f"Camera: {cameraname}") # For debugging 
         
         catch_up += 1
-        catch_up %= 100
+        catch_up %= 30 # only catch up every x frames
 
         while True:
             before_read: float = time.time()
@@ -70,8 +69,12 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
             if not ret:
                 break
 
+            # only catch up occasionally, because doing so requires waiting a bit
+            if catch_up != 0:
+                break
+
             # if the frame is read too quickly, it's probably from the buffer
-            if catch_up == 0 or after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
+            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
                 break
 
         # Exit the loop if no more frames in either video
@@ -118,13 +121,6 @@ for i in range(len(cameras)):
 try:
     while True:
         time.sleep(1)
-        if (not enable_gui) and enable_enable_gui:
-            alive_threads: int = 0
-            for thread in threads:
-                alive_threads += 1 if thread.is_alive() else 0
-            if alive_threads == 1:
-                print(COLOR_BOLD, "ENABLING GUI", COLOR_RESET, sep="")
-                enable_gui = True
 except (KeyboardInterrupt, SystemExit) as e:
     print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
     is_interrupted = True
