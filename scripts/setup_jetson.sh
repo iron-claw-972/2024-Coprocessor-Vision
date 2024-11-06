@@ -48,6 +48,18 @@ REPOSITORY="$(git rev-parse --show-toplevel)"
 DATA_DIR="$HOME/Downloads"
 LOG_FILE="$REPOSITORY/setup.log"
 
+NO_CLONE=${NO_CLONE:-}
+NO_BUILD=${NO_BUILD:-}
+
+# some env vars
+if [[ ! -z "$NO_CLONE" ]]; then
+	yell "NO_CLONE set -- skipping clone/pull"
+fi
+
+if [[ ! -z "$NO_BUILD" ]]; then
+	yell "NO_BUILD set -- skipping build"
+fi
+
 # just in case
 if [[ $REPOSITORY == "" ]]; then
 	echo "Repository is null, exiting"
@@ -117,10 +129,10 @@ function cloneIf() {
 
 export USE_PRIORITIZED_TEXT_FOR_LD=1
 export CMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc/"
-assertCommand "if cuda compiler exists" [ -f "$CMAKE_CUDA_COMPILER" ]
+#assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
 export CUDA_HOME="/usr/local/cuda"
-assertCommand "if cuda home exists" [ -d "$CUDA_HOME" ]
-export MAX_JOBS=2 # for memory reasons
+#assertCommand "if cuda home exists" test -d "$CUDA_HOME"
+export MAX_JOBS=3 # for memory reasons
 #export FORCE_CUDA=1
 
 cd "$REPOSITORY"
@@ -140,42 +152,57 @@ else
 fi
 # shellcheck disable=SC1091
 source ./venv/bin/activate
+runCommand pip install --upgrade pip
+runCommand pip install pyntcore "--index-url=https://wpilib.jfrog.io/artifactory/api/pypi/wpilib-python-release-2024/simple"
 runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
-yell "CLONING PYTORCH"
-cd "$DATA_DIR"
-cloneIf "https://github.com/pytorch/pytorch.git" pytorch
+if [[ -z $NO_CLONE ]]; then
+	yell "CLONING PYTORCH"
+	cd "$DATA_DIR"
+	cloneIf "https://github.com/pytorch/pytorch.git" pytorch
+	cd pytorch
+	runCommand git submodule update --init --recursive --depth 1 # in case they add more submodules
+fi
 
-yell "BUILDING PYTORCH"
-cd pytorch
+yell "BUILDING AND INSTALLING PYTORCH"
+cd "$DATA_DIR/pytorch"
 runAsRoot apt-get install build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
-runAsRoot pip install setuptools # workaround https://github.com/pytorch/pytorch/issues/129304
-runAsRoot python3 setup.py bdist_wheel
+runAsRoot apt-get install python3-setuptools # workaround https://github.com/pytorch/pytorch/issues/129304
+if [[ -z "$NO_BUILD" ]]; then
+	runAsRoot /usr/bin/python3 setup.py bdist_wheel
+fi
 runCommand pip install ./dist/*.whl
-assertCommand "pytorch install" python3 -c <<EOF
+cd "$REPOSITORY" # can't be run in the pytorch dir for reasons
+assertCommand "pytorch uses cuda" python3 -c "
 import torch
 if torch.cuda.device_count() == 1:
 	exit(0)
 else:
 	exit(1)
-EOF
+"
 
-yell "CLONING TORCHVISION"
-cd "$DATA_DIR"
-cloneIf "https://github.com/pytorch/vision.git" vision
+if [[ -z $NO_CLONE ]]; then
+	yell "CLONING TORCHVISION"
+	cd "$DATA_DIR"
+	cloneIf "https://github.com/pytorch/vision.git" vision
+	cd vision
+	runCommand git submodule update --init --recursive --depth 1
+fi
 
-yell "BUILDING TORCHVISION"
-cd vision
-runCommand pip install -r requirements.txt
-runCommand python3 setup.py bdist_wheel
+yell "BUILDING AND INSTALLING TORCHVISION"
+cd "$DATA_DIR/vision"
+if [[ -z "$NO_BUILD" ]]; then
+	runCommand /usr/bin/python3 setup.py bdist_wheel
+fi
 runCommand pip install ./dist/*.whl
-assertCommand "torchvision install" python3 -c <<EOF
+cd "$REPOSITORY"
+assertCommand "torchvision starts" python3 -c "
 import torch
 import torchvision
-EOF
+"
 
-yell "SETUP COMPLETE"
-echo "Please restart now."
+yell "SETUP COMPLETE!"
+echo "Remember to source $REPOSITORY/venv/bin/activate before trying to run the code."
 
