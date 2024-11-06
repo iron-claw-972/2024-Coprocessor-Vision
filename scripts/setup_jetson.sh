@@ -52,11 +52,11 @@ NO_CLONE=${NO_CLONE:-}
 NO_BUILD=${NO_BUILD:-}
 
 # some env vars
-if [[ ! -z "$NO_CLONE" ]]; then
+if [[ -n "$NO_CLONE" ]]; then
 	yell "NO_CLONE set -- skipping clone/pull"
 fi
 
-if [[ ! -z "$NO_BUILD" ]]; then
+if [[ -n "$NO_BUILD" ]]; then
 	yell "NO_BUILD set -- skipping build"
 fi
 
