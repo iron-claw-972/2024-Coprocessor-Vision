@@ -2,11 +2,14 @@
 from threading import Thread
 import cv2
 import numpy as np
+import ultralytics # type: ignore
 from ultralytics import YOLO # type: ignore
 from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
 import signal
+import line_profiler
+from queue import Queue, Empty
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -25,13 +28,43 @@ def handle_signal(signalnum, stack_frame):
 signal.signal(signal.SIGTERM, handle_signal)
 
 # Load the model
-model = YOLO('models/best.pt')
+model: ultralytics.models.yolo.model.YOLO = YOLO('models/best.pt')
+print(type(model))
+
+queues: list[Queue] = []
+rendered: Queue = Queue(maxsize=2)
+active: dict[int, bool] = {}
 
 # exit gracefully on ^C
 is_interrupted: bool = False
 
 
-def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
+#@line_profiler.profile
+def run_cam_in_thread(q: Queue, cameraname: int) -> None:
+    video: cv2.VideoCapture = cv2.VideoCapture(cameraname)
+    print(f"Camera: {cameraname}") # For debugging
+
+    while True:
+        # read one frame
+        ret: bool
+        frame: np.ndarray
+        ret, frame = video.read()  # Read the video frames
+
+        if is_interrupted or not ret:
+            print(f"CAMERA {cameraname} EXITING")
+            break
+
+        #cv2.imshow(f"Tracking_Stream_{cameraname}", frame)
+        #key = cv2.waitKey(1)
+        q.put_nowait(frame.copy())
+
+    active[cameraname] = False
+    q.put(np.zeros((640, 480, 3)))
+    video.release()
+
+
+#@line_profiler.profile
+def run_tracker_in_thread(q: Queue, cameraname: int, file_index: int, rendered: Queue) -> None:
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -45,64 +78,51 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     Note:
         Press 'q' to quit the video display window.
     """
-    video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
-    #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
 
     while True:
-        print(f"Camera: {cameraname}") # For debugging 
-        
-        while True:
-            before_read: float = time.time()
-            ret: bool
-            frame: np.ndarray
-            ret, frame = video.read()  # Read the video frames
-            after_read: float = time.time()
 
-            # exit if no frames remain
-            if not ret:
-                break
-
-            # if the frame is read too quickly, it's probably from the buffer
-            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
-                break
-
-        # Exit the loop if no more frames in either video
-        if (not ret) or is_interrupted:
-            print(f"CAMERA {cameraname} EXITING")
+        if is_interrupted or not active[cameraname]:
             break
 
         start_time: float = time.time()
+        frame = q.get(block=True)
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
-        ntables.add_results(results, file_index)
+        #ntables.add_results(results, file_index) # FIXME
         end_time: float = time.time()
 
-        fps = str(round(1/(end_time-start_time), 2))
-        cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+        #fps = str(round(1/(end_time-start_time), 2))
+        #cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA)
 
-        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+        rendered.put(res_plotted.copy())
 
-        key = cv2.waitKey(1)
-
-    # Release video sources
-    video.release()
 
 threads: list[Thread] = []
 for i in range(len(cameras)):
-    # Create the thread
+    q: Queue = Queue(maxsize=2)
+    queues.append(q)
+    active[cameras[i]] = True
+
     # daemon=True makes it shut down if something goes wrong
-    thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
+    tracker = Thread(target=run_tracker_in_thread, args=(q, cameras[i], i, rendered), daemon=True)
+    camera_thread = Thread(target=run_cam_in_thread, args=(q, cameras[i]), daemon=True)
     # Add to the array to use later
-    threads.append(thread)
+    threads.append(tracker)
+    threads.append(camera_thread)
+
     # Start the thread
-    thread.start()
+    tracker.start()
+    camera_thread.start()
 
 try:
+    frame: np.ndarray = np.zeros((640, 320, 3))
     while True:
-        time.sleep(1)
+        frame = rendered.get(block=False)
+        cv2.imshow("frame", frame)
+        key = cv2.waitKey(1)
 except (KeyboardInterrupt, SystemExit) as e:
     print(COLOR_BOLD, "INTERRUPT RECIEVED -- EXITING", COLOR_RESET, sep="")
     is_interrupted = True
