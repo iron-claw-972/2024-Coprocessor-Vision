@@ -7,6 +7,7 @@ from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
 import signal
+from queue import Queue, Full
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -31,6 +32,32 @@ model = YOLO('models/best.pt')
 is_interrupted: bool = False
 
 
+def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
+    video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
+    #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
+
+    while True:
+        ret: bool
+        frame: np.ndarray
+        ret, frame = video.read()  # Read the video frames
+
+        # exit if no frames remain
+        if not ret:
+            break
+    
+        if is_interrupted:
+            break
+
+        try:
+            q.put_nowait(frame.copy())
+        except Full:
+            pass
+
+    # Release video sources
+    video.release()
+        
+
+
 def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
@@ -45,33 +72,22 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     Note:
         Press 'q' to quit the video display window.
     """
-    video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
-    #video.set(cv2.CAP_PROP_BUFFERSIZE, 0) # doesn't work :(
+
+    q: Queue = Queue(maxsize=1)
+    cam_thread = Thread(target=run_cam_in_thread, args=(cameraname, file_index, q), daemon=False)
+    cam_thread.start()
 
     while True:
         print(f"Camera: {cameraname}") # For debugging 
-        
-        while True:
-            before_read: float = time.time()
-            ret: bool
-            frame: np.ndarray
-            ret, frame = video.read()  # Read the video frames
-            after_read: float = time.time()
-
-            # exit if no frames remain
-            if not ret:
-                break
-
-            # if the frame is read too quickly, it's probably from the buffer
-            if after_read - before_read > 1/20 / 10: # assume 20fps and take a tenth of that
-                break
 
         # Exit the loop if no more frames in either video
-        if (not ret) or is_interrupted:
+        if is_interrupted or (not cam_thread.is_alive()):
             print(f"CAMERA {cameraname} EXITING")
             break
 
         start_time: float = time.time()
+
+        frame: np.ndarray = q.get(block=True)
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True)
@@ -87,8 +103,6 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
 
         key = cv2.waitKey(1)
 
-    # Release video sources
-    video.release()
 
 threads: list[Thread] = []
 for i in range(len(cameras)):
