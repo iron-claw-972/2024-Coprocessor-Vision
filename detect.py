@@ -7,7 +7,7 @@ from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
 import signal
-from queue import Queue, Full
+from queue import Empty, Queue, Full
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -48,6 +48,13 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         if is_interrupted:
             break
 
+        # Empty the queue if it is full so the frame in it is the most recent one
+        if q.full():
+            # This should almost never  happen, but it avoids any potential errors if it is emptied between calling full and get
+            try:
+                q.get_nowait()
+            except Empty:
+                pass
         try:
             q.put_nowait(frame.copy())
         except Full:
