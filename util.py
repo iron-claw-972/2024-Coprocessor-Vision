@@ -5,12 +5,12 @@ from ultralytics.engine.results import Boxes # type: ignore
 # fov = [70, 43.75] # Arducam
 fov = [59.703, 33.583] # Microsoft lifecam or other cameras with diagonal FOV of 68.5 degrees and 1280x720 resolution
 
-def get_x_offset_deg(box: Boxes) -> float:
+def get_x_offset_deg(box: Boxes, index: int) -> float:
     #source: Limelight docs(LINK HERE)
 
-    if len(box[0]):
+    if len(box[index]):
         hfov = fov[0]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
+        x1, y1, x2, y2 = box.xyxy[index]
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
@@ -28,12 +28,12 @@ def get_x_offset_deg(box: Boxes) -> float:
     
     return 0
 
-def get_y_offset_deg(box: Boxes) -> float:
+def get_y_offset_deg(box: Boxes, index: int) -> float:
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
         vfov = fov[1]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
+        x1, y1, x2, y2 = box.xyxy[index]
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
 
