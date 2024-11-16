@@ -203,6 +203,23 @@ import torch
 import torchvision
 "
 
+yell "SETTING UP NETPLAN"
+runAsRoot apt install netplan.io
+runAsRoot mkdir -p /etc/netplan
+runAsRoot touch /etc/netplan/50-robot.yaml
+runAsRoot chmod 600 /etc/netplan/50-robot.yaml
+runAsRoot tee /etc/netplan/50-robot.yaml <<EOF
+network:
+    version: 2
+    renderer: NetworkManager
+    ethernets:
+        enP8p1s0:
+            addresses:
+                - 10.9.72.10/24
+            dhcp4: True
+            optional: True
+EOF
+
 yell "SETUP COMPLETE!"
 echo "Remember to source $REPOSITORY/venv/bin/activate before trying to run the code."
 
