@@ -219,6 +219,11 @@ network:
             dhcp4: True
             optional: True
 EOF
+runAsRoot netplan apply
+
+yell "INSTALLING JTOP"
+runAsRoot pip install -U jetson-stats
+echo "Please restart"
 
 yell "SETUP COMPLETE!"
 echo "Remember to source $REPOSITORY/venv/bin/activate before trying to run the code."
