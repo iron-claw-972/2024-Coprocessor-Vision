@@ -51,7 +51,7 @@ def add_results(result: Results, index: int) -> None:
         i -= 1
     # Add new values to arrays
     boxes = result.boxes
-    if not boxes:
+    if boxes.id is None:
         return
 
     for i in range(len(boxes.id)):

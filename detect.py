@@ -77,7 +77,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         results: list[Results] = model.track(frame, persist=True)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
-        ntables.add_results(results, file_index)
+        ntables.add_results(results[0], file_index)
         end_time: float = time.time()
 
         fps = str(round(1/(end_time-start_time), 2))
