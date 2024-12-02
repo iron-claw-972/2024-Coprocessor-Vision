@@ -157,6 +157,27 @@ runCommand pip install pyntcore "--index-url=https://wpilib.jfrog.io/artifactory
 runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
+yell "CREATING SERVICE"
+runAsRoot touch /etc/systemd/system/detect.service
+runAsRoot tee /etc/systemd/system/detect.service <<EOF
+
+[Unit]
+Description=Run ze code
+
+[Service]
+Type=exec
+ExecStart=$REPOSITORY/venv/bin/python3 $REPOSITORY/detect.py
+
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+echo "NOTE: if you want the code to run on startup, please \"systemctl enable detect.service\" as root."
+
 if [[ -z $NO_CLONE ]]; then
 	yell "CLONING PYTORCH"
 	cd "$DATA_DIR"
