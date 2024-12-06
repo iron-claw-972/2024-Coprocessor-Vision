@@ -128,7 +128,7 @@ function cloneIf() {
 }
 
 export USE_PRIORITIZED_TEXT_FOR_LD=1
-export CMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc/"
+export CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc/")"
 #assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
 export CUDA_HOME="/usr/local/cuda"
 #assertCommand "if cuda home exists" test -d "$CUDA_HOME"
@@ -187,6 +187,7 @@ if [[ -z $NO_CLONE ]]; then
 fi
 
 yell "BUILDING AND INSTALLING PYTORCH"
+runCommand mkdir -p "$DATA_DIR/pytorch"
 cd "$DATA_DIR/pytorch"
 runAsRoot apt-get install build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
@@ -213,6 +214,7 @@ if [[ -z $NO_CLONE ]]; then
 fi
 
 yell "BUILDING AND INSTALLING TORCHVISION"
+runCommand mkdir -p "$DATA_DIR/vision"
 cd "$DATA_DIR/vision"
 if [[ -z "$NO_BUILD" ]]; then
 	runCommand /usr/bin/python3 setup.py bdist_wheel
