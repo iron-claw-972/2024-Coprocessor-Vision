@@ -1,6 +1,13 @@
 import ntcore
 import util
 from ultralytics.engine.results import Results # type: ignore
+from enum import Enum
+
+class ObjClass(Enum):
+    # FIXME: these are placeholders
+    NOTE = 0
+    THING_A = 1
+    THING_B = 2
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
@@ -16,7 +23,7 @@ camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub
 #distance: list[float] = []
 x_offset: list[float] = []
 y_offset: list[float] = []
-object_class: list[str] = []
+object_class: list[ObjClass] = []
 camera_index: list[int] = []
 
 nt_inst.startClient4("Coprocessor")
@@ -33,7 +40,7 @@ def publish_y_angle_offset() -> None:
     y_angle_offset_topic.set(y_offset)
 
 def publish_class() -> None:
-    object_class_topic.set(object_class)
+    object_class_topic.set([str(i) for i in object_class])
 
 def publish_camera_index() -> None:
     camera_index_topic.set(camera_index)
@@ -57,7 +64,7 @@ def add_results(results: list[Results], index: int) -> None:
         x_offset.append(util.get_x_offset_deg(box))
         y_offset.append(util.get_y_offset_deg(box))
         #distance.append(util.get_distance(box))
-        object_class.append(str(box.cls))
+        object_class.append(ObjClass(round(box.cls.numpy()[0])))
         camera_index.append(index)
     # Publish values to NetworkTables
     #publish_distance()
