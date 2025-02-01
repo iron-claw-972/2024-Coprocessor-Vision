@@ -25,7 +25,7 @@ def handle_signal(signalnum, stack_frame):
 signal.signal(signal.SIGTERM, handle_signal)
 
 # Load the model
-model = YOLO('models/best.pt')
+model = YOLO('models/yolo11m.pt')
 
 # exit gracefully on ^C
 is_interrupted: bool = False
