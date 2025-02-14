@@ -158,23 +158,7 @@ runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
 yell "CREATING SERVICE"
-runAsRoot touch /etc/systemd/system/detect.service
-runAsRoot tee /etc/systemd/system/detect.service <<EOF
-
-[Unit]
-Description=Run ze code
-
-[Service]
-Type=exec
-ExecStart=$REPOSITORY/venv/bin/python3 $REPOSITORY/detect.py
-
-Restart=always
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
+runAsRoot cp ./detect.service /etc/systemd/system/detect.service
 
 echo "NOTE: if you want the code to run on startup, please \"systemctl enable detect.service\" as root."
 
@@ -229,19 +213,8 @@ import torchvision
 yell "SETTING UP NETPLAN"
 runAsRoot apt install netplan.io
 runAsRoot mkdir -p /etc/netplan
-runAsRoot touch /etc/netplan/50-robot.yaml
+runAsRoot cp ./50-robot.yaml /etc/netplan/50-robot.yaml
 runAsRoot chmod 600 /etc/netplan/50-robot.yaml
-runAsRoot tee /etc/netplan/50-robot.yaml <<EOF
-network:
-    version: 2
-    renderer: NetworkManager
-    ethernets:
-        enP8p1s0:
-            addresses:
-                - 10.9.72.10/24
-            dhcp4: True
-            optional: True
-EOF
 
 yell "SETUP COMPLETE!"
 echo "Remember to source $REPOSITORY/venv/bin/activate before trying to run the code."
