@@ -132,7 +132,7 @@ export CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
 #assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
 export CUDA_HOME="/usr/local/cuda"
 #assertCommand "if cuda home exists" test -d "$CUDA_HOME"
-export MAX_JOBS=3 # for memory reasons
+export MAX_JOBS=1 # for memory reasons
 #export FORCE_CUDA=1
 
 cd "$REPOSITORY"
