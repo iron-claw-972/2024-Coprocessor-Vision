@@ -158,7 +158,7 @@ runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
 yell "CREATING SERVICE"
-runAsRoot cp ./detect.service /etc/systemd/system/detect.service
+runAsRoot cp ./scripts/detect.service /etc/systemd/system/detect.service
 
 echo "NOTE: if you want the code to run on startup, please \"systemctl enable detect.service\" as root."
 
@@ -215,7 +215,7 @@ import torchvision
 yell "SETTING UP NETPLAN"
 runAsRoot apt install netplan.io
 runAsRoot mkdir -p /etc/netplan
-runAsRoot cp ./50-robot.yaml /etc/netplan/50-robot.yaml
+runAsRoot cp ./scripts/50-robot.yaml /etc/netplan/50-robot.yaml
 runAsRoot chmod 600 /etc/netplan/50-robot.yaml
 
 yell "SETUP COMPLETE!"
