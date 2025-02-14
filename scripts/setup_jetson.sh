@@ -168,6 +168,7 @@ if [[ -z $NO_CLONE ]]; then
 	cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 	cd pytorch
 	runCommand git submodule update --init --recursive --depth 1 # in case they add more submodules
+	runCommand git submodule sync --recursive
 fi
 
 yell "BUILDING AND INSTALLING PYTORCH"
@@ -195,6 +196,7 @@ if [[ -z $NO_CLONE ]]; then
 	cloneIf "https://github.com/pytorch/vision.git" vision
 	cd vision
 	runCommand git submodule update --init --recursive --depth 1
+	runCommand git submodule sync --recursive
 fi
 
 yell "BUILDING AND INSTALLING TORCHVISION"
