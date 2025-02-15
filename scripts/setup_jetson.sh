@@ -128,6 +128,7 @@ function cloneIf() {
 }
 
 export USE_PRIORITIZED_TEXT_FOR_LD=1
+export USE_NATIVE_ARCH=1 # stop pytorch doing dumb stuff
 export CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
 #assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
 export CUDA_HOME="/usr/local/cuda"
