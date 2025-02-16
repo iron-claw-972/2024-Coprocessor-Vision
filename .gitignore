@@ -8,6 +8,9 @@ yolov8n.pt
 /venv
 /.venv
 
+# Log that setup_jetson.sh creates
+/setup.log
+
 # Vim's swap files
 *.sw?
 
