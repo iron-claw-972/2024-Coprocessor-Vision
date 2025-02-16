@@ -135,7 +135,8 @@ export NO_DISTRIBUTED=1
 export USE_DISTRIBUTED=0
 export USE_NCCL=0
 
-export CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
+CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
+export CUDACXX
 #assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
 export CUDA_HOME="/usr/local/cuda/" # this *might* need a /bin/ at the end
 #assertCommand "if cuda home exists" test -d "$CUDA_HOME"
