@@ -1,0 +1,11 @@
+
+network:
+    version: 2
+    renderer: NetworkManager
+    ethernets:
+        enP8p1s0:
+            addresses:
+                - 10.9.72.10/24
+            dhcp4: True
+            optional: True
+
