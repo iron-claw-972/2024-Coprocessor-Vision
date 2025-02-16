@@ -6,9 +6,8 @@ function yell() {
 	echo -e "\e[1m$*\e[0m"
 }
 
-yell "THIS SCRIPT IS WIP AND HAS NOT BEEN TESTED!"
-echo "Only run this script on the coprocessor."
 yell "DO NOT RUN THIS SCRIPT ON YOUR LAPTOP"
+echo "Only run this script on the coprocessor."
 read -rp "Are you sure you want to continue? [yN]
 >" toContinue
 
