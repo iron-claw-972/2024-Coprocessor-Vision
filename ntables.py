@@ -62,8 +62,7 @@ def add_results(results: list[Results], index: int) -> None:
         x_offset.append(util.get_x_offset_deg(box))
         y_offset.append(util.get_y_offset_deg(box))
         #distance.append(util.get_distance(box))
-        object_class.append(str(ObjClasses(box.cls)))
-        print(str(ObjClasses(box.cls)))
+        object_class.append(str(ObjClasses(box.cls.cpu().numpy()[0])))
         camera_index.append(index)
     # Publish values to NetworkTables
     #publish_distance()
