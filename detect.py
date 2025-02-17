@@ -92,8 +92,11 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     cam_thread = Thread(target=run_cam_in_thread, args=(cameraname, file_index, q), daemon=False)
     cam_thread.start()
 
+    print(f"Camera {cameraname} activating")
+
     while True:
-        print(f"Camera: {cameraname}") # For debugging 
+        if (is_interactive):
+            print(f"Camera: {cameraname}") # For debugging 
 
         # Exit the loop if no more frames in either video
         if is_interrupted or (not cam_thread.is_alive()):
