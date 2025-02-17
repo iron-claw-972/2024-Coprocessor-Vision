@@ -141,7 +141,7 @@ except (KeyboardInterrupt, SystemExit) as e:
 for thread in threads:
     thread.join()
 
-if (enable_gui)
+if (enable_gui):
     # Clean up and close windows
     cv2.destroyAllWindows()
 
