@@ -7,11 +7,19 @@ from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
 import signal
+import sys
 from queue import Empty, Queue, Full
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
 COLOR_RESET = "\033[0m"
+
+# are we running interactively?
+is_interactive: bool = sys.stderr.isatty()
+
+# for more configurability
+# if we're not interactive, there is no X server, so the GUI doesn't work
+enable_gui: bool = is_interactive
 
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
@@ -50,7 +58,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
 
         # Empty the queue if it is full so the frame in it is the most recent one
         if q.full():
-            # This should almost never  happen, but it avoids any potential errors if it is emptied between calling full and get
+            # This should almost never happen, but it avoids any potential errors if it is emptied between calling full and get
             try:
                 q.get_nowait()
             except Empty:
@@ -84,8 +92,11 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     cam_thread = Thread(target=run_cam_in_thread, args=(cameraname, file_index, q), daemon=False)
     cam_thread.start()
 
+    print(f"Camera {cameraname} activating")
+
     while True:
-        print(f"Camera: {cameraname}") # For debugging 
+        if (is_interactive):
+            print(f"Camera: {cameraname}") # For debugging 
 
         # Exit the loop if no more frames in either video
         if is_interrupted or (not cam_thread.is_alive()):
@@ -97,18 +108,19 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         frame: np.ndarray = q.get(block=True)
 
         # Track objects in frames if available
-        results: list[Results] = model.track(frame, persist=True)
+        results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, file_index)
         end_time: float = time.time()
 
-        fps = str(round(1/(end_time-start_time), 2))
-        cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+        if (enable_gui):
+            fps = str(round(1/(end_time-start_time), 2))
+            cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-        cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+            cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
 
-        key = cv2.waitKey(1)
+            key = cv2.waitKey(1)
 
 
 threads: list[Thread] = []
@@ -132,6 +144,7 @@ except (KeyboardInterrupt, SystemExit) as e:
 for thread in threads:
     thread.join()
 
-# Clean up and close windows
-cv2.destroyAllWindows()
+if (enable_gui):
+    # Clean up and close windows
+    cv2.destroyAllWindows()
 
