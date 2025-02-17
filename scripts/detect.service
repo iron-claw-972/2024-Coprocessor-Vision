@@ -1,0 +1,14 @@
+
+[Unit]
+Description=Run ze code
+
+[Service]
+Type=exec
+ExecStart=$REPOSITORY/venv/bin/python3 $REPOSITORY/detect.py
+
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+

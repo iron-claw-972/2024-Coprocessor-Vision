@@ -6,9 +6,8 @@ function yell() {
 	echo -e "\e[1m$*\e[0m"
 }
 
-yell "THIS SCRIPT IS WIP AND HAS NOT BEEN TESTED!"
-echo "Only run this script on the coprocessor."
 yell "DO NOT RUN THIS SCRIPT ON YOUR LAPTOP"
+echo "Only run this script on the coprocessor."
 read -rp "Are you sure you want to continue? [yN]
 >" toContinue
 
@@ -128,11 +127,19 @@ function cloneIf() {
 }
 
 export USE_PRIORITIZED_TEXT_FOR_LD=1
-export CMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc/"
+
+# stop pytorch doing dumb stuff
+export USE_NATIVE_ARCH=1
+export NO_DISTRIBUTED=1
+export USE_DISTRIBUTED=0
+export USE_NCCL=0
+
+CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
+export CUDACXX
 #assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
-export CUDA_HOME="/usr/local/cuda"
+export CUDA_HOME="/usr/local/cuda/" # this *might* need a /bin/ at the end
 #assertCommand "if cuda home exists" test -d "$CUDA_HOME"
-export MAX_JOBS=3 # for memory reasons
+export MAX_JOBS=1 # for memory reasons
 #export FORCE_CUDA=1
 
 cd "$REPOSITORY"
@@ -157,15 +164,22 @@ runCommand pip install pyntcore "--index-url=https://wpilib.jfrog.io/artifactory
 runCommand pip install -r requirements.txt
 runCommand pip uninstall --yes torch torchvision # we'll install those manually
 
+yell "CREATING SERVICE"
+runAsRoot cp ./scripts/detect.service /etc/systemd/system/detect.service
+
+echo "NOTE: if you want the code to run on startup, please \"systemctl enable detect.service\" as root."
+
 if [[ -z $NO_CLONE ]]; then
 	yell "CLONING PYTORCH"
 	cd "$DATA_DIR"
 	cloneIf "https://github.com/pytorch/pytorch.git" pytorch
 	cd pytorch
 	runCommand git submodule update --init --recursive --depth 1 # in case they add more submodules
+	runCommand git submodule sync --recursive
 fi
 
 yell "BUILDING AND INSTALLING PYTORCH"
+runCommand mkdir -p "$DATA_DIR/pytorch"
 cd "$DATA_DIR/pytorch"
 runAsRoot apt-get install build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
@@ -189,9 +203,11 @@ if [[ -z $NO_CLONE ]]; then
 	cloneIf "https://github.com/pytorch/vision.git" vision
 	cd vision
 	runCommand git submodule update --init --recursive --depth 1
+	runCommand git submodule sync --recursive
 fi
 
 yell "BUILDING AND INSTALLING TORCHVISION"
+runCommand mkdir -p "$DATA_DIR/vision"
 cd "$DATA_DIR/vision"
 if [[ -z "$NO_BUILD" ]]; then
 	runCommand /usr/bin/python3 setup.py bdist_wheel
@@ -206,19 +222,8 @@ import torchvision
 yell "SETTING UP NETPLAN"
 runAsRoot apt install netplan.io
 runAsRoot mkdir -p /etc/netplan
-runAsRoot touch /etc/netplan/50-robot.yaml
+runAsRoot cp ./scripts/50-robot.yaml /etc/netplan/50-robot.yaml
 runAsRoot chmod 600 /etc/netplan/50-robot.yaml
-runAsRoot tee /etc/netplan/50-robot.yaml <<EOF
-network:
-    version: 2
-    renderer: NetworkManager
-    ethernets:
-        enP8p1s0:
-            addresses:
-                - 10.9.72.10/24
-            dhcp4: True
-            optional: True
-EOF
 
 yell "SETUP COMPLETE!"
 echo "Remember to source $REPOSITORY/venv/bin/activate before trying to run the code."
