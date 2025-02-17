@@ -1,0 +1,7 @@
+{
+  "ROBOFLOW_API_KEY": "your_api_key_here",
+  "ROBOFLOW_MODEL": "your_model_name/version",
+  "ROBOFLOW_SIZE": 640,
+  "FRAMERATE": 30,
+  "BUFFER": 5
+}

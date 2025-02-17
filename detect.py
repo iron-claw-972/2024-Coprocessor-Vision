@@ -26,11 +26,11 @@ def handle_signal(signalnum, stack_frame):
 signal.signal(signal.SIGTERM, handle_signal)
 
 # Load the model
-model = YOLO('models/best.pt')
+model = YOLO('models/best_Reefscape_2025_model.pt')
 
 # exit gracefully on ^C
 is_interrupted: bool = False
-
+print("Hello World")
 
 def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
     video: cv2.VideoCapture = cv2.VideoCapture(cameraname)  # Read the video file
