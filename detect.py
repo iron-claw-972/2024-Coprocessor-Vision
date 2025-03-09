@@ -6,6 +6,7 @@ from ultralytics import YOLO # type: ignore
 from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
+import snapshotter
 import signal
 import sys
 from queue import Empty, Queue, Full
@@ -92,6 +93,8 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
     cam_thread = Thread(target=run_cam_in_thread, args=(cameraname, file_index, q), daemon=False)
     cam_thread.start()
 
+    snapshot_time: float = time.time()
+
     print(f"Camera {cameraname} activating")
 
     while True:
@@ -114,6 +117,13 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
         ntables.add_results(results, file_index)
         end_time: float = time.time()
 
+        if (time.time() - snapshot_time > 10):
+            try:
+                snapshot_queue.put_nowait((frame, results[0]))
+            except Full:
+                pass
+            snapshot_time = time.time()
+
         if (enable_gui):
             fps = str(round(1/(end_time-start_time), 2))
             cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
@@ -132,6 +142,8 @@ for i in range(len(cameras)):
     threads.append(thread)
     # Start the thread
     thread.start()
+
+snapshot_thread: Thread = Thread(target=snapshotter.run_snapshotter_thread, daemon=True)
 
 try:
     while True:

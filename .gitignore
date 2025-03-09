@@ -11,6 +11,9 @@ yolov8n.pt
 # Log that setup_jetson.sh creates
 /setup.log
 
+# snapshot files
+/snapshots/*
+
 # Vim's swap files
 *.sw?
 
