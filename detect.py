@@ -9,6 +9,7 @@ import ntables
 import snapshotter
 import signal
 import sys
+from mjpeg_streamer import MjpegServer, Stream
 from queue import Empty, Queue, Full
 
 # ANSI colors
@@ -18,9 +19,8 @@ COLOR_RESET = "\033[0m"
 # are we running interactively?
 is_interactive: bool = sys.stderr.isatty()
 
-# for more configurability
-# if we're not interactive, there is no X server, so the GUI doesn't work
-enable_gui: bool = is_interactive
+# disable when not needed to improve performance
+enable_mjpeg: bool = is_interactive
 
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
@@ -74,7 +74,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         
 
 
-def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
+def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> None:
     """
     Runs a video file or webcam stream concurrently with the YOLOv8 model using threading.
 
@@ -124,20 +124,26 @@ def run_tracker_in_thread(cameraname: int, file_index: int) -> None:
                 pass
             snapshot_time = time.time()
 
-        if (enable_gui):
-            fps = str(round(1/(end_time-start_time), 2))
+        if (enable_mjpeg):
+            fps: int = str(round(1/(end_time-start_time), 2))
             cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
-            cv2.imshow(f"Tracking_Stream_{cameraname}", res_plotted)
+            stream.set_frame(res_plotted)
 
-            key = cv2.waitKey(1)
 
+if (enable_mjpeg):
+    stream: Stream = Stream("Detectorator", size=(640, 480), quality=50, fps=10)
+    server: MjpegServer = MjpegServer("localhost", 8080)
+    server.add_stream(stream)
+    server.start()
+else:
+    stream = None
 
 threads: list[Thread] = []
 for i in range(len(cameras)):
     # Create the thread
     # daemon=True makes it shut down if something goes wrong
-    thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i), daemon=True)
+    thread = Thread(target=run_tracker_in_thread, args=(cameras[i], i, stream), daemon=True)
     # Add to the array to use later
     threads.append(thread)
     # Start the thread
@@ -156,7 +162,8 @@ except (KeyboardInterrupt, SystemExit) as e:
 for thread in threads:
     thread.join()
 
-if (enable_gui):
+if (enable_mjpeg):
     # Clean up and close windows
+    server.stop()
     cv2.destroyAllWindows()
 
