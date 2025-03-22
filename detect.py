@@ -119,7 +119,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
 
         if (time.time() - snapshot_time > 10):
             try:
-                snapshot_queue.put_nowait((frame, results[0]))
+                snapshotter.snapshot_queue.put_nowait((frame, results[0]))
             except Full:
                 pass
             snapshot_time = time.time()
