@@ -10,7 +10,7 @@ import datetime
 
 snapshot_queue: Queue = Queue(10)
 
-SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "/snapshots")
+SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "snapshots")
 
 def write_image(img: np.ndarray, detections: Results) -> None:
     timestamp: str = datetime.datetime.now().isoformat()
@@ -21,15 +21,26 @@ def write_image(img: np.ndarray, detections: Results) -> None:
 def count_images() -> int:
     return len(glob.glob(SNAPSHOT_PATH + "/*.jpg"))
 
+def submit(img: np.ndarray, detections: Results) -> None:
+    global snapshot_queue
+    try:
+        snapshot_queue.put_nowait((img, detections))
+    except Full:
+        pass
+        
+
 def run_snapshotter_thread() -> typing.NoReturn:
+    global snapshot_queue
     written_with_detections = 0 # try to get some images without detections too
     img_count: int = count_images()
     while True:
         img: np.ndarray
         detections: Results
-        img, detections = snapshot_queue.get()
+        img, detections = snapshot_queue.get(block=True)
+        print(f"img:{img_count}, wwd:{written_with_detections}")
 
-        if (img_count >= 200): # stop at 200 images
+        if (img_count >= 200): # stop at x images
+            print("IMFULL")
             sleep(1)
             continue
 
@@ -37,8 +48,11 @@ def run_snapshotter_thread() -> typing.NoReturn:
             write_image(img, detections)
             img_count += 1
             written_with_detections += 1
-        elif (img_count > 0): # take some non-detection images
+        elif (written_with_detections > 0): # take some non-detection images
             write_image(img, detections)
             img_count -= 1
             written_with_detections -= 1
+        else:
+            print("VBAD")
+            print(detections)
 

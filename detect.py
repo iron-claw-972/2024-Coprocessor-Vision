@@ -117,16 +117,13 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         ntables.add_results(results, file_index)
         end_time: float = time.time()
 
-        if (time.time() - snapshot_time > 10):
-            try:
-                snapshotter.snapshot_queue.put_nowait((frame, results[0]))
-            except Full:
-                pass
+        if (time.time() - snapshot_time > 1): # snapshot every x seconds
+            snapshotter.submit(frame.copy(), results[0].new())
             snapshot_time = time.time()
 
         if (enable_mjpeg):
-            fps: int = str(round(1/(end_time-start_time), 2))
-            cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+            fps: float = round(1/(end_time-start_time), 2)
+            cv2.putText(res_plotted, str(fps), (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
             stream.set_frame(res_plotted)
 
@@ -150,6 +147,7 @@ for i in range(len(cameras)):
     thread.start()
 
 snapshot_thread: Thread = Thread(target=snapshotter.run_snapshotter_thread, daemon=True)
+snapshot_thread.start()
 
 try:
     while True:
