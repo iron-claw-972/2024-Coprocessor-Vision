@@ -117,8 +117,8 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         ntables.add_results(results, file_index)
         end_time: float = time.time()
 
-        if (time.time() - snapshot_time > 1): # snapshot every x seconds
-            snapshotter.submit(frame.copy(), results[0].new())
+        if (time.time() - snapshot_time > 10): # snapshot every x seconds
+            snapshotter.submit(results[0])
             snapshot_time = time.time()
 
         if (enable_mjpeg):

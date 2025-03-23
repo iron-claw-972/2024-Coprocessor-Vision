@@ -12,19 +12,19 @@ snapshot_queue: Queue = Queue(10)
 
 SNAPSHOT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "snapshots")
 
-def write_image(img: np.ndarray, detections: Results) -> None:
+def write_image(detections: Results) -> None:
     timestamp: str = datetime.datetime.now().isoformat()
-    cv.imwrite(os.path.join(SNAPSHOT_PATH, timestamp + ".jpg"), img)
+    cv.imwrite(os.path.join(SNAPSHOT_PATH, timestamp + ".jpg"), detections.orig_img)
     with open(os.path.join(SNAPSHOT_PATH, timestamp + ".csv"), "w") as f:
         f.write(detections.to_csv())
 
 def count_images() -> int:
     return len(glob.glob(SNAPSHOT_PATH + "/*.jpg"))
 
-def submit(img: np.ndarray, detections: Results) -> None:
+def submit(detections: Results) -> None:
     global snapshot_queue
     try:
-        snapshot_queue.put_nowait((img, detections))
+        snapshot_queue.put_nowait(detections.numpy())
     except Full:
         pass
         
@@ -34,25 +34,20 @@ def run_snapshotter_thread() -> typing.NoReturn:
     written_with_detections = 0 # try to get some images without detections too
     img_count: int = count_images()
     while True:
-        img: np.ndarray
         detections: Results
-        img, detections = snapshot_queue.get(block=True)
-        print(f"img:{img_count}, wwd:{written_with_detections}")
+        detections = snapshot_queue.get(block=True)
+        # print(f"img:{img_count}, wwd:{written_with_detections}")
 
         if (img_count >= 200): # stop at x images
-            print("IMFULL")
             sleep(1)
             continue
 
         if (detections.boxes is not None):
-            write_image(img, detections)
+            write_image(detections)
             img_count += 1
             written_with_detections += 1
         elif (written_with_detections > 0): # take some non-detection images
-            write_image(img, detections)
+            write_image(detections)
             img_count -= 1
             written_with_detections -= 1
-        else:
-            print("VBAD")
-            print(detections)
 
