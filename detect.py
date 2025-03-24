@@ -9,6 +9,9 @@ import ntables
 import snapshotter
 import signal
 import sys
+import platform
+import functools
+import subprocess
 from mjpeg_streamer import MjpegServer, Stream
 from queue import Empty, Queue, Full
 
@@ -21,6 +24,16 @@ is_interactive: bool = sys.stderr.isatty()
 
 # disable when not needed to improve performance
 enable_mjpeg: bool = is_interactive
+
+@functools.cache # only run once
+def get_ips() -> list[str]:
+    ip_list: list[str] = []
+    if (platform.system() == "Linux"): # screw windows
+       ipstr: str = subprocess.check_output(["hostname", "-I"]) \
+           .decode("UTF-8").rstrip("\n").strip()
+       ip_list = ipstr.split(" ")
+    ip_list.append("localhost")
+    return ip_list
 
 # Define the video files for the trackers
 # Path to video files, 0 for webcam, 1 for external camera
@@ -130,7 +143,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
 
 if (enable_mjpeg):
     stream: Stream = Stream("Detectorator", size=(640, 480), quality=50, fps=10)
-    server: MjpegServer = MjpegServer("localhost", 8080)
+    server: MjpegServer = MjpegServer(get_ips(), 8080)
     server.add_stream(stream)
     server.start()
 else:
