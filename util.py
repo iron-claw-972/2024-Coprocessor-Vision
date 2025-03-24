@@ -2,8 +2,8 @@ import math
 from ultralytics.engine.results import Boxes # type: ignore
 
 # TODO: Change these to the actual camera values
-fov = [70, 43.75] # Arducam
-# fov = [59.703, 33.583] # Microsoft lifecam or other cameras with diagonal FOV of 68.5 degrees and 1280x720 resolution
+FOV = [70, 43.75] # Arducam
+# FOV = [59.703, 33.583] # Microsoft lifecam or other cameras with diagonal FOV of 68.5 degrees and 1280x720 resolution
 
 def get_fovs(box: Boxes) -> list[float]:
     if (len(boxes) == 0):
@@ -12,14 +12,14 @@ def get_fovs(box: Boxes) -> list[float]:
     x1, y1, x2, y2 = box.xyxy[0]
     center: list[float] = [(x1+x2)/2,(y1+y2)/2]
     zero_centered: list[float] = [center[0] - (box.orig_shape[0]/2), center[1] - (box.orig_shape[1]/2)]
-    fovs: list[float] = [math.tan(zero_centered[0]) * (fov[0]/2), math.tan(zero_centered[1]) * (fov[1]/2)]
+    fovs: list[float] = [math.tan(zero_centered[0]) * (FOV[0]/2), math.tan(zero_centered[1]) * (FOV[1]/2)]
     return fovs
 
 def get_x_offset_deg(box: Boxes) -> float:
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
-        hfov = fov[0]*(math.pi/180)
+        hfov = FOV[0]*(math.pi/180)
         x1, y1, x2, y2 = box.xyxy[0]
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
@@ -42,7 +42,7 @@ def get_y_offset_deg(box: Boxes) -> float:
     #source: Limelight docs(LINK HERE)
 
     if len(box[0]):
-        vfov = fov[1]*(math.pi/180)
+        vfov = FOV[1]*(math.pi/180)
         x1, y1, x2, y2 = box.xyxy[0]
 
         bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
