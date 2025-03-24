@@ -36,7 +36,6 @@ def run_snapshotter_thread() -> typing.NoReturn:
     while True:
         detections: Results
         detections = snapshot_queue.get(block=True)
-        # print(f"img:{img_count}, wwd:{written_with_detections}")
 
         if (img_count >= 200): # stop at x images
             sleep(1)
