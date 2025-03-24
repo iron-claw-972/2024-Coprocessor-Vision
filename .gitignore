@@ -8,6 +8,9 @@ yolov8n.pt
 /venv
 /.venv
 
+# mypy thingy
+/.mypy_cache
+
 # Log that setup_jetson.sh creates
 /setup.log
 
