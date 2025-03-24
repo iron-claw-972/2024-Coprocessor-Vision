@@ -52,7 +52,29 @@ def get_y_offset_deg(box: Boxes) -> float:
     return 0
  
     
-# TODO: Add tis if we're using it, low pirority
 def get_distance(box: Boxes) -> float:
-    raise NotImplementedError("get_distance doesn't exist yet -- please write it!")
+    if len(box[0]) == 0:
+        return 0.0
+    
+    x1, y1, x2, y2 = box.xyxy[0]
+    ground_point_y = y2  # Bottom of bounding box
+    
+    # TODO need to be changed to the actual camera values
+    CAMERA_HEIGHT = 0.5  
+    CAMERA_TILT = 30.0  # camera tilt downwards (degs)
+    IMAGE_HEIGHT = 640 #px
+    
+    # to radians
+    camera_tilt_rad = CAMERA_TILT * (math.pi/180)
+    vfov_rad = fov[1] * (math.pi/180)
+    
+    normalized_y = (ground_point_y - (IMAGE_HEIGHT/2)) / (IMAGE_HEIGHT/2)
+    angle_in_fov = normalized_y * (vfov_rad/2)
+    
+    # Calculate the actual angle from camera to ground point
+    ground_angle = camera_tilt_rad - angle_in_fov
+
+    distance = CAMERA_HEIGHT / math.tan(ground_angle)
+    
+    return float(distance)
 
