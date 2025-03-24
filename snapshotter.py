@@ -24,7 +24,7 @@ def count_images() -> int:
 def submit(detections: Results) -> None:
     global snapshot_queue
     try:
-        snapshot_queue.put_nowait(detections.numpy())
+        snapshot_queue.put_nowait(detections.cpu().numpy())
     except Full:
         pass
         
