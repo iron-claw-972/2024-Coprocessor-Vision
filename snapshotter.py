@@ -27,7 +27,6 @@ def submit(detections: Results) -> None:
         snapshot_queue.put_nowait(detections.cpu().numpy())
     except Full:
         pass
-        
 
 def run_snapshotter_thread() -> typing.NoReturn:
     global snapshot_queue

@@ -8,10 +8,10 @@ RESOLUTION = [720, 1280]
 
 def get_fovs(box: Boxes) -> list[float]:
     x1, y1, x2, y2 = box.xyxy[0]
-    center: list[int] = [(x1+x2)/2,(y1+y2)/2]
-    zero_centered: list[int] = [center[0] - (RESOLUTION[0]/2), center[1] - (RESOLUTION[1]/2)]
-    viewport: list[int] = [zero_centered[0], zero_centered[1], 1]
-    fovs: list[int] = [math.tan(viewport[0]) * (fov[0]/2), math.tan(viewport[1]) * (fov[1]/2)]
+    center: list[float] = [(x1+x2)/2,(y1+y2)/2]
+    zero_centered: list[float] = [center[0] - (RESOLUTION[0]/2), center[1] - (RESOLUTION[1]/2)]
+    viewport: list[float] = [zero_centered[0], zero_centered[1], 1]
+    fovs: list[float] = [math.tan(viewport[0]) * (fov[0]/2), math.tan(viewport[1]) * (fov[1]/2)]
     return fovs
 
 def get_x_offset_deg(box: Boxes) -> float:
