@@ -1,4 +1,4 @@
-import cv2
+import cv2 # type: ignore
 
 # Initialize webcam
 video = cv2.VideoCapture(0)  # Use 0 for the default camera
