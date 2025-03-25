@@ -132,10 +132,8 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         end_time: float = time.time()
 
         if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
-            print(util.get_fovs(results[0].boxes))
             print(util.get_x_offset_deg(results[0].boxes))
             print(util.get_y_offset_deg(results[0].boxes))
-
 
         if (time.time() - snapshot_time > 10): # snapshot every x seconds
             snapshotter.submit(results[0])
