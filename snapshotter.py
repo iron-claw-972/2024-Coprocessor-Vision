@@ -32,12 +32,18 @@ def run_snapshotter_thread() -> typing.NoReturn:
     global snapshot_queue
     written_with_detections = 0 # try to get some images without detections too
     img_count: int = count_images()
+
+    try:
+        os.mkdir(SNAPSHOT_PATH)
+    except FileExistsError:
+        pass
+
     while True:
         detections: Results
         detections = snapshot_queue.get(block=True)
 
         if (img_count >= 200): # stop at x images
-            sleep(1)
+            sleep(10)
             continue
 
         if (detections.boxes is not None):

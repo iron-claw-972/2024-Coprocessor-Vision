@@ -83,6 +83,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         except Full:
             pass
 
+    print(f"CAMERA {cameraname} EXITING (camera thread)")
     # Release video sources
     video.release()
         
@@ -111,18 +112,17 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
 
     print(f"Camera {cameraname} activating")
 
-    while True:
+    # Exit the loop if no more frames in the video
+    while not is_interrupted and cam_thread.is_alive():
         if (is_interactive):
             print(f"Camera: {cameraname}") # For debugging 
 
-        # Exit the loop if no more frames in either video
-        if is_interrupted or (not cam_thread.is_alive()):
-            print(f"CAMERA {cameraname} EXITING")
-            break
-
         start_time: float = time.time()
 
-        frame: np.ndarray = q.get(block=True)
+        try:
+            frame: np.ndarray = q.get(block=True, timeout=5)
+        except Empty: # stop the thread getting stuck if the camera thread immidiately dies
+            continue
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
@@ -144,6 +144,9 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
             cv2.putText(res_plotted, str(fps), (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
             stream.set_frame(res_plotted)
+
+    cam_thread.join()
+    print(f"CAMERA {cameraname} EXITING (detector thread)")
 
 
 if (enable_mjpeg):
@@ -179,7 +182,6 @@ for thread in threads:
     thread.join()
 
 if (enable_mjpeg):
-    # Clean up and close windows
+    # Clean up
     server.stop()
-    cv2.destroyAllWindows()
 
