@@ -1,11 +1,12 @@
 import ntcore
 import util
+import time
 from enum import Enum
 from ultralytics.engine.results import Results # type: ignore
 
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 
-pub_sub_options = ntcore.PubSubOptions(sendAll=True, periodic=0.02)
+pub_sub_options = ntcore.PubSubOptions(sendAll=True)
 
 table = nt_inst.getTable("object_detection")
 distance_topic = table.getDoubleArrayTopic("distance").publish(options=pub_sub_options)
@@ -13,6 +14,7 @@ x_angle_offset_topic = table.getDoubleArrayTopic("x_offset").publish(options=pub
 y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=pub_sub_options)
 object_class_topic = table.getStringArrayTopic("class").publish(options=pub_sub_options)
 camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub_options)
+latency_topic = table.getDoubleArrayTopic("latency").publish(options=pub_sub_options)
 
 class ObjClasses(Enum):
     ALGAE = 0
@@ -23,6 +25,7 @@ x_offset: list[float] = []
 y_offset: list[float] = []
 object_class: list[str] = []
 camera_index: list[int] = []
+latency_list: list[float] = []
 
 nt_inst.startClient4("Coprocessor")
 nt_inst.setServerTeam(972)
@@ -43,7 +46,10 @@ def publish_class() -> None:
 def publish_camera_index() -> None:
     camera_index_topic.set(camera_index)
 
-def add_results(results: list[Results], index: int) -> None:
+def publish_latency() -> None:
+    latency_topic.set(latency_list)
+
+def add_results(results: list[Results], start_time: float, index: int) -> None:
     global nt_inst
     # Remove old values from the same camera, do not change values from other cameras
     i = len(camera_index) - 1
@@ -54,6 +60,7 @@ def add_results(results: list[Results], index: int) -> None:
             #distance.pop(i)
             object_class.pop(i)
             camera_index.pop(i)
+            latency_list.pop(i)
         i -= 1
     # Add new values to arrays
     for result in results:
@@ -65,10 +72,12 @@ def add_results(results: list[Results], index: int) -> None:
         #distance.append(util.get_distance(box))
         object_class.append(result.names[box.cls.cpu().numpy()[0]])
         camera_index.append(index)
+        latency_topic.append(time.time() - start_time)
     # Publish values to NetworkTables
     #publish_distance()
     publish_x_angle_offset()
     publish_y_angle_offset()
     publish_class()
     publish_camera_index()
+    publish_latency()
     

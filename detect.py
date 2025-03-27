@@ -128,7 +128,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
-        ntables.add_results(results, file_index)
+        ntables.add_results(results, start_time, file_index)
         end_time: float = time.time()
 
         if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
