@@ -72,7 +72,7 @@ def add_results(results: list[Results], start_time: float, index: int) -> None:
         #distance.append(util.get_distance(box))
         object_class.append(result.names[box.cls.cpu().numpy()[0]])
         camera_index.append(index)
-        latency_topic.append(time.time() - start_time)
+        latency_list.append(time.time() - start_time)
     # Publish values to NetworkTables
     #publish_distance()
     publish_x_angle_offset()
