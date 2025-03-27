@@ -44,6 +44,7 @@ def publish_camera_index() -> None:
     camera_index_topic.set(camera_index)
 
 def add_results(results: list[Results], index: int) -> None:
+    global nt_inst
     # Remove old values from the same camera, do not change values from other cameras
     i = len(camera_index) - 1
     while i >= 0:
@@ -62,7 +63,7 @@ def add_results(results: list[Results], index: int) -> None:
         x_offset.append(util.get_x_offset_deg(box))
         y_offset.append(util.get_y_offset_deg(box))
         #distance.append(util.get_distance(box))
-        object_class.append(str(ObjClasses(box.cls.cpu().numpy()[0])))
+        object_class.append(result.names[box.cls.cpu().numpy()[0]])
         camera_index.append(index)
     # Publish values to NetworkTables
     #publish_distance()

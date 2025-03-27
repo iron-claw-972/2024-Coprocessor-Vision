@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! ./venv/bin/python3
 from threading import Thread
 import cv2
 import numpy as np
@@ -132,8 +132,8 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         end_time: float = time.time()
 
         if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
-            print(util.get_x_offset_deg(results[0].boxes))
-            print(util.get_y_offset_deg(results[0].boxes))
+            print("x: " str(util.get_x_offset_deg(results[0].boxes)))
+            print("y: " str(util.get_y_offset_deg(results[0].boxes)))
 
         if (time.time() - snapshot_time > 10): # snapshot every x seconds
             snapshotter.submit(results[0])
@@ -141,6 +141,10 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
 
         if (enable_mjpeg):
             fps: float = round(1/(end_time-start_time), 2)
+            center: tuple(int, int) = (640, 360)
+            size: int = 50
+            cv2.line(res_plotted, (center[0] - size, center[1]), (center[0] + size, center[1]), (0, 128, 255), 5)
+            cv2.line(res_plotted, (center[0], center[1] - size), (center[0], center[1] + size), (0, 128, 255), 5)
             cv2.putText(res_plotted, str(fps), (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
             stream.set_frame(res_plotted)
