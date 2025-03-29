@@ -40,7 +40,7 @@ def get_ips() -> list[str]:
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
-cameras: list[int] = [i for i in range(1)]
+cameras: list[int] = [i for i in range(5)]
 
 def handle_signal(signalnum, stack_frame):
     raise SystemExit()
