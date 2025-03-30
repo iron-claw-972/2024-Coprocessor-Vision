@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! ./venv/bin/python3
 from threading import Thread
 import cv2
 import numpy as np
@@ -6,6 +6,7 @@ from ultralytics import YOLO # type: ignore
 from ultralytics.engine.results import Results # type: ignore
 import time
 import ntables
+import snapshotter
 import signal
 import sys
 import platform
@@ -13,6 +14,7 @@ import functools
 import subprocess
 from mjpeg_streamer import MjpegServer, Stream
 from queue import Empty, Queue, Full
+import util
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -81,6 +83,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         except Full:
             pass
 
+    print(f"CAMERA {cameraname} EXITING (camera thread)")
     # Release video sources
     video.release()
         
@@ -105,33 +108,49 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
     cam_thread = Thread(target=run_cam_in_thread, args=(cameraname, file_index, q), daemon=False)
     cam_thread.start()
 
+    snapshot_time: float = time.time()
+
     print(f"Camera {cameraname} activating")
 
-    while True:
+    # Exit the loop if no more frames in the video
+    while not is_interrupted and cam_thread.is_alive():
         if (is_interactive):
             print(f"Camera: {cameraname}") # For debugging 
 
-        # Exit the loop if no more frames in either video
-        if is_interrupted or (not cam_thread.is_alive()):
-            print(f"CAMERA {cameraname} EXITING")
-            break
-
         start_time: float = time.time()
 
-        frame: np.ndarray = q.get(block=True)
+        try:
+            frame: np.ndarray = q.get(block=True, timeout=5)
+        except Empty: # stop the thread getting stuck if the camera thread immidiately dies
+            continue
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
-        ntables.add_results(results, file_index)
+        ntables.add_results(results, start_time, file_index)
         end_time: float = time.time()
 
+        if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
+            print("x: " + str(util.get_x_offset_deg(results[0].boxes)))
+            print("y: " + str(util.get_y_offset_deg(results[0].boxes)))
+
+        if (time.time() - snapshot_time > 10): # snapshot every x seconds
+            snapshotter.submit(results[0])
+            snapshot_time = time.time()
+
         if (enable_mjpeg):
-            fps: int = str(round(1/(end_time-start_time), 2))
-            cv2.putText(res_plotted, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+            fps: float = round(1/(end_time-start_time), 2)
+            center: tuple(int, int) = (640, 360)
+            size: int = 50
+            cv2.line(res_plotted, (center[0] - size, center[1]), (center[0] + size, center[1]), (0, 128, 255), 5)
+            cv2.line(res_plotted, (center[0], center[1] - size), (center[0], center[1] + size), (0, 128, 255), 5)
+            cv2.putText(res_plotted, str(fps), (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
 
             stream.set_frame(res_plotted)
+
+    cam_thread.join()
+    print(f"CAMERA {cameraname} EXITING (detector thread)")
 
 
 if (enable_mjpeg):
@@ -152,6 +171,9 @@ for i in range(len(cameras)):
     # Start the thread
     thread.start()
 
+snapshot_thread: Thread = Thread(target=snapshotter.run_snapshotter_thread, daemon=True)
+snapshot_thread.start()
+
 try:
     while True:
         time.sleep(1)
@@ -164,7 +186,6 @@ for thread in threads:
     thread.join()
 
 if (enable_mjpeg):
-    # Clean up and close windows
+    # Clean up
     server.stop()
-    cv2.destroyAllWindows()
 
