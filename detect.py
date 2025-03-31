@@ -15,6 +15,7 @@ import subprocess
 from mjpeg_streamer import MjpegServer, Stream
 from queue import Empty, Queue, Full
 import util
+import undistort
 
 # ANSI colors
 COLOR_BOLD = "\033[1m"
@@ -80,7 +81,9 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
             except Empty:
                 pass
         try:
-            q.put_nowait((frame.copy(), start_time))
+            if frame is not None:
+                print(frame.shape)
+            q.put_nowait((undistort.undistort(frame), start_time))
         except Full:
             pass
 
@@ -155,6 +158,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
     cam_thread.join()
     print(f"CAMERA {cameraname} EXITING (detector thread)")
 
+undistort.get_values()
 
 if (enable_mjpeg):
     stream: Stream = Stream("Detectorator", size=(640, 480), quality=50, fps=10)
