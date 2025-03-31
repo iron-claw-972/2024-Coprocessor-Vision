@@ -81,8 +81,6 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
             except Empty:
                 pass
         try:
-            if frame is not None:
-                print(frame.shape)
             q.put_nowait((undistort.undistort(frame), start_time))
         except Full:
             pass
