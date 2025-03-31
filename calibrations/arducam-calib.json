@@ -1,48 +1,36 @@
 {
     "camera": "Arducam OV9782 USB Camera (0c45:6366)",
     "platform": "Windows NT 10.0; Win64; x64",
-    "camera_matrix": {
-        "type_id": "opencv-matrix",
-        "rows": 3,
-        "cols": 3,
-        "dt": "d",
-        "data": [
-            923.2308787216019,
+    "camera_matrix": [
+        [
+            912.8239143668162,
             0,
-            691.7713938538457,
+            708.3872494522312
+        ],
+        [
             0,
-            923.4654877236699,
-            310.85676723519424,
+            913.5420630011473,
+            301.22864364783123
+        ],
+        [
             0,
             0,
             1
         ]
-    },
-    "distortion_coefficients": {
-        "type_id": "opencv-matrix",
-        "rows": 5,
-        "cols": 1,
-        "dt": "d",
-        "data": [
-            -0.011375888567443437,
-            0.17869141827342788,
-            -0.0014672714674231005,
-            -0.00471675549231407,
-            -0.23603400556576623
-        ]
-    },
+    ],
+    "distortion_coefficients": [
+        0.08579756903814745,
+        -0.12170625288472055,
+        -0.005331227741280391,
+        0.002324923127205305,
+        0.051889140344845146
+    ],
     "distortion_model": "rectilinear",
-    "avg_reprojection_error": 0.7064874316745178,
-    "img_size": {
-        "type_id": "opencv-matrix",
-        "rows": 2,
-        "cols": 1,
-        "dt": "d",
-        "data": [
-            1280,
-            720
-        ]
-    },
-    "keyframes": 10,
-    "calibration_time": "Sun, 30 Mar 2025 23:35:50 GMT"
+    "avg_reprojection_error": 0.7434488678145269,
+    "img_size": [
+        1280,
+        720
+    ],
+    "keyframes": 8,
+    "calibration_time": "Mon, 31 Mar 2025 22:15:00 GMT"
 }
