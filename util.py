@@ -16,7 +16,7 @@ def get_x_offset_deg(box: Boxes) -> float:
 
         cx = bbox_center_coord[0]
 
-        nx = (cx-(box.orig_shape[1]/2))/(box.orig_shape[0]/2)
+        nx = (cx-(box.orig_shape[1]/2))/(box.orig_shape[1]/2)
 
         vw = 2*math.tan((hfov/2))
 
@@ -39,7 +39,7 @@ def get_y_offset_deg(box: Boxes) -> float:
 
         cy = bbox_center_coord[1]
 
-        ny = (cy-(box.orig_shape[0]/2))/(box.orig_shape[1]/2)
+        ny = (cy-(box.orig_shape[0]/2))/(box.orig_shape[0]/2)
 
         vh = 2*math.tan((vfov/2))
 
