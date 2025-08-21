@@ -15,6 +15,7 @@ y_angle_offset_topic = table.getDoubleArrayTopic("y_offset").publish(options=pub
 object_class_topic = table.getStringArrayTopic("class").publish(options=pub_sub_options)
 camera_index_topic = table.getIntegerArrayTopic("index").publish(options=pub_sub_options)
 latency_topic = table.getDoubleArrayTopic("latency").publish(options=pub_sub_options)
+flippy_topic = table.getBooleanTopic("flippy").publish(options=pub_sub_options)
 
 class ObjClasses(Enum):
     ALGAE = 0
@@ -26,6 +27,7 @@ y_offset: list[float] = []
 object_class: list[str] = []
 camera_index: list[int] = []
 latency_list: list[float] = []
+last_flippy: bool = False
 
 nt_inst.startClient4("Coprocessor")
 nt_inst.setServerTeam(972)
@@ -48,6 +50,11 @@ def publish_camera_index() -> None:
 
 def publish_latency() -> None:
     latency_topic.set(latency_list)
+
+def flip_flippy() -> None:
+    global last_flippy
+    last_flippy = not last_flippy
+    flippy_topic.set(last_flippy)
 
 def add_results(results: list[Results], start_time: float, index: int) -> None:
     global nt_inst
@@ -80,4 +87,6 @@ def add_results(results: list[Results], start_time: float, index: int) -> None:
     publish_class()
     publish_camera_index()
     publish_latency()
+    flip_flippy()
+    nt_inst.flush()
     

@@ -63,6 +63,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         ret: bool
         frame: np.ndarray
         ret, frame = video.read()  # Read the video frames
+        start_time: float = time.time()
 
         # exit if no frames remain
         if not ret:
@@ -79,7 +80,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
             except Empty:
                 pass
         try:
-            q.put_nowait(frame.copy())
+            q.put_nowait((frame.copy(), start_time))
         except Full:
             pass
 
@@ -117,15 +118,17 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         if (is_interactive):
             print(f"Camera: {cameraname}") # For debugging 
 
-        start_time: float = time.time()
 
         try:
-            frame: np.ndarray = q.get(block=True, timeout=5)
+            start_time: float
+            frame: np.ndarray
+            frame, start_time = q.get(block=True, timeout=5)
         except Empty: # stop the thread getting stuck if the camera thread immidiately dies
             continue
 
         # Track objects in frames if available
         results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
+        #time.sleep(0.2)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, start_time, file_index)
@@ -155,7 +158,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
 
 if (enable_mjpeg):
     stream: Stream = Stream("Detectorator", size=(640, 480), quality=50, fps=10)
-    server: MjpegServer = MjpegServer(get_ips(), 8080)
+    server: MjpegServer = MjpegServer("0.0.0.0", 5090)
     server.add_stream(stream)
     server.start()
 else:
