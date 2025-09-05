@@ -134,14 +134,6 @@ export NO_DISTRIBUTED=1
 export USE_DISTRIBUTED=0
 export USE_NCCL=0
 
-CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
-export CUDACXX
-#assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
-export CUDA_HOME="/usr/local/cuda/" # this *might* need a /bin/ at the end
-#assertCommand "if cuda home exists" test -d "$CUDA_HOME"
-export MAX_JOBS=1 # for memory reasons
-#export FORCE_CUDA=1
-
 cd "$REPOSITORY"
 
 yell "RUNNING SYSTEM UPGRADE"
@@ -149,7 +141,15 @@ runAsRoot apt-get update -y
 runAsRoot apt-get upgrade -y
 
 yell "INSTALLING JETPACK"
-runAsRoot apt-get install -y nvidia-jetpack
+runAsRoot apt-get install -y nvidia-jetpack nvidia-cuda-dev python3-venv
+
+CUDACXX="$(realpath "/usr/local/cuda/bin/nvcc")"
+export CUDACXX
+#assertCommand "if cuda compiler exists" test -f "$CMAKE_CUDA_COMPILER"
+export CUDA_HOME="/usr/local/cuda/" # this *might* need a /bin/ at the end
+#assertCommand "if cuda home exists" test -d "$CUDA_HOME"
+export MAX_JOBS=1 # for memory reasons
+#export FORCE_CUDA=1
 
 yell "RUNNING PIP COMMANDS"
 if [[ -f ./venv/bin/activate ]]; then
@@ -181,11 +181,11 @@ fi
 yell "BUILDING AND INSTALLING PYTORCH"
 runCommand mkdir -p "$DATA_DIR/pytorch"
 cd "$DATA_DIR/pytorch"
-runAsRoot apt-get install build-essential cmake ninja-build python3-pip
+runAsRoot apt-get install -y build-essential cmake ninja-build python3-pip
 runCommand pip install -r requirements.txt
-runAsRoot apt-get install python3-setuptools # workaround https://github.com/pytorch/pytorch/issues/129304
+runCommand pip install setuptools wheel
 if [[ -z "$NO_BUILD" ]]; then
-	runAsRoot /usr/bin/python3 setup.py bdist_wheel
+	runCommand /usr/bin/python3 setup.py bdist_wheel
 fi
 runCommand pip install ./dist/*.whl
 cd "$REPOSITORY" # can't be run in the pytorch dir for reasons
