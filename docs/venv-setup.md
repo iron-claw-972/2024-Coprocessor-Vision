@@ -4,7 +4,7 @@ How To Setup A Virtual Environment on the School Computers
 To Setup
 --------
 1. Open a PowerShell terminal. The VSCode builtin one will do.
-2. Run `Set-ExecutionPolicy -Scope User Bypass`
+2. Run `Set-ExecutionPolicy -Scope CurrentUser Bypass`
 3. Ensure you are in the toplevel directory of the repository.
 4. Run `py -m venv venv`
 5. Run `. .\venv\Scripts\activate.ps1`
