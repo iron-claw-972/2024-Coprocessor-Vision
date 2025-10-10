@@ -141,7 +141,7 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         if (time.time() - snapshot_time > 10): # snapshot every x seconds
             snapshotter.submit(results[0])
             snapshot_time = time.time()
-
+            
         if (enable_mjpeg):
             fps: float = round(1/(end_time-start_time), 2)
             center: tuple(int, int) = (640, 360)
