@@ -1,6 +1,6 @@
-numpy<1.25.0
-lapx>=0.5.2
-ultralytics>=8.0.221
-pyntcore>=2023.4.3.0
+numpy
+lapx
+ultralytics
+pyntcore
 mjpeg-streamer
 
