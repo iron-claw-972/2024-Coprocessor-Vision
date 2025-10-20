@@ -40,29 +40,29 @@ model = project.version(int(ROBOFLOW_MODEL.split("/")[1])).model
 video = cv2.VideoCapture(0)
 
 
-# Function to predict using the Roboflow API
 def infer(frame):
     try:
-        # Perform inference on the current frame
-        prediction = model.predict(frame, confidence=30, overlap=30).json()  # Reduce confidence threshold for speed
-
-        # Draw the prediction results on the frame
-        for item in prediction["predictions"]:
-            x1, y1, x2, y2 = item["x"] - item[""] / 2, item["y"] - item[""] / 2, item["x"] + item[""] / 2, item["y"] + item[""] / 2
-            label = item["class"]
-            confidence = item["confidence"]
-
-            # Draw bounding box
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-            cv2.putText(frame, f"{label} {confidence*100:.1f}%", (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
+        # Convert frame to bytes
+        retval, buffer = cv2.imencode('.jpg', frame)
+        img_bytes = buffer.tobytes()
+        
+        # Predict using Roboflow SDK
+        result = model.predict(img_bytes, confidence=40, overlap=30).json()
+        print(f"Prediction result: {result}")
+        
+        # Draw bounding boxes on the frame
+        for prediction in result['predictions']:
+            x, y, w, h = prediction['x'], prediction['y'], prediction['width'], prediction['height']
+            cv2.rectangle(frame, (int(x-w/2), int(y-h/2)), (int(x+w/2), int(y+h/2)), (0, 255, 0), 2)
+            cv2.putText(frame, f"{prediction['class']} {prediction['confidence']:.2f}", 
+                        (int(x-w/2), int(y-h/2)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        
         return frame
-
     except Exception as e:
-        print(f"Inference error: {e}")
+        print(f"An error occurred during inference: {e}")
         return frame
-
-
+    
+    
 # Main loop
 while True:
     ret, frame = video.read()
