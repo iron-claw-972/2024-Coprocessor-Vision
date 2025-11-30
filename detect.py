@@ -1,5 +1,6 @@
 #! ./venv/bin/python3
 from threading import Thread
+import time
 import cv2
 import numpy as np
 from ultralytics import YOLO # type: ignore
@@ -40,7 +41,7 @@ def get_ips() -> list[str]:
 # Path to video files, 0 for webcam, 1 for external camera
 # On a robot, these should be in the same order as the cameras in VisionConstants.java
 # TODO: This should only be the cameras we need, not every possibility
-cameras: list[int] = [i for i in range(5)]
+cameras: list[int] = [i for i in range(4)]
 
 def handle_signal(signalnum, stack_frame):
     raise SystemExit()
@@ -49,7 +50,7 @@ def handle_signal(signalnum, stack_frame):
 signal.signal(signal.SIGTERM, handle_signal)
 
 # Load the model
-model = YOLO('models/best_Reefscape_2025_model.pt')
+model = YOLO('models/best_Reefscape_2025_model.engine')
 
 # exit gracefully on ^C
 is_interrupted: bool = False
@@ -72,6 +73,8 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
         if is_interrupted:
             break
 
+        frame_res = cv2.resize(frame, (640, 640))
+
         # Empty the queue if it is full so the frame in it is the most recent one
         if q.full():
             # This should almost never happen, but it avoids any potential errors if it is emptied between calling full and get
@@ -80,7 +83,7 @@ def run_cam_in_thread(cameraname: int, file_index: int, q: Queue) -> None:
             except Empty:
                 pass
         try:
-            q.put_nowait((frame.copy(), start_time))
+            q.put_nowait((frame_res, start_time))
         except Full:
             pass
 
@@ -126,29 +129,33 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         except Empty: # stop the thread getting stuck if the camera thread immidiately dies
             continue
 
+        #start_time: float = time.time()
+
         # Track objects in frames if available
-        results: list[Results] = model.track(frame, persist=True, verbose=is_interactive)
+        results: list[Results] = model.predict(frame, verbose=is_interactive)
         #time.sleep(0.2)
         res_plotted: np.ndarray = results[0].plot()
         # Calculate offsets and add to NetworkTables
         ntables.add_results(results, start_time, file_index)
+
         end_time: float = time.time()
 
         if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
             print("x: " + str(util.get_x_offset_deg(results[0].boxes)))
             print("y: " + str(util.get_y_offset_deg(results[0].boxes)))
 
-        if (time.time() - snapshot_time > 10): # snapshot every x seconds
-            snapshotter.submit(results[0])
-            snapshot_time = time.time()
+        #if (time.time() - snapshot_time > 10): # snapshot every x seconds
+            #snapshotter.submit(results[0])
+            #snapshot_time = time.time()
 
         if (enable_mjpeg):
             fps: float = round(1/(end_time-start_time), 2)
-            center: tuple(int, int) = (640, 360)
-            size: int = 50
+            center: tuple(int, int) = (640//2, 480//2)
+            size: int = 25
             cv2.line(res_plotted, (center[0] - size, center[1]), (center[0] + size, center[1]), (0, 128, 255), 5)
             cv2.line(res_plotted, (center[0], center[1] - size), (center[0], center[1] + size), (0, 128, 255), 5)
             cv2.putText(res_plotted, str(fps), (7, 70), cv2.FONT_HERSHEY_SIMPLEX , 3, (100, 255, 0), 3, cv2.LINE_AA) 
+            print("FPS: " + str(fps))
 
             stream.set_frame(res_plotted)
 

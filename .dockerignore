@@ -1,0 +1,24 @@
+bin/
+
+# Default yolo model
+yolov8n.pt
+
+# Python stuff
+/__pycache__
+/venv
+/.venv
+
+# mypy thingy
+/.mypy_cache
+
+# Log that setup_jetson.sh creates
+/setup.log
+
+# snapshot files
+/snapshots/*
+
+# Vim's swap files
+*.sw?
+
+*.mp4
+
