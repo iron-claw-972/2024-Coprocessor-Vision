@@ -69,17 +69,21 @@ def add_results(results: list[Results], start_time: float, index: int) -> None:
             camera_index.pop(i)
             latency_list.pop(i)
         i -= 1
-    # Add new values to arrays
+    # Add new values to arrays: iterates over ALL detections, not just the first one
     for result in results:
-        box = result.boxes
-        if not box:
+        boxes = result.boxes
+        if boxes is None or len(boxes) == 0:
             continue
-        x_offset.append(util.get_x_offset_deg(box))
-        y_offset.append(util.get_y_offset_deg(box))
-        #distance.append(util.get_distance(box))
-        object_class.append(result.names[box.cls.cpu().numpy()[0]])
-        camera_index.append(index)
-        latency_list.append(time.time() - start_time)
+        # Iterate over each individual detection in the result
+        for box_idx in range(len(boxes)):
+            xyxy = boxes.xyxy[box_idx]
+            cls_id = int(boxes.cls[box_idx].cpu().numpy())
+            x_offset.append(util.get_x_offset_deg_single(xyxy, boxes.orig_shape))
+            y_offset.append(util.get_y_offset_deg_single(xyxy, boxes.orig_shape))
+            #distance.append(util.get_distance(box))
+            object_class.append(result.names[cls_id])
+            camera_index.append(index)
+            latency_list.append(time.time() - start_time)
     # Publish values to NetworkTables
     #publish_distance()
     publish_x_angle_offset()
