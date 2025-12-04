@@ -46,26 +46,6 @@ def get_y_offset_deg_single(xyxy: tuple, orig_shape: tuple) -> float:
     return float(y_offset_deg)
 
 
-def get_x_offset_deg(box: Boxes) -> float:
-    """calculates x offset (deg) for the first box (legacy function)"""
-    # source: Limelight docs(LINK HERE)
-
-    if len(box[0]):
-        return get_x_offset_deg_single(box.xyxy[0], box.orig_shape)
-
-    return 0
-
-
-def get_y_offset_deg(box: Boxes) -> float:
-    """calculates y offset (deg) for the first box (legacy function)"""
-    # source: Limelight docs(LINK HERE)
-
-    if len(box[0]):
-        return get_y_offset_deg_single(box.xyxy[0], box.orig_shape)
-
-    return 0
-
-
 # TODO: Add this if we're using it, low priority
 def get_distance(box: Boxes) -> float:
     raise NotImplementedError("get_distance doesn't exist yet -- please write it!")

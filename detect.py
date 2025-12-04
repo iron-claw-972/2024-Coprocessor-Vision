@@ -141,8 +141,10 @@ def run_tracker_in_thread(cameraname: int, file_index: int, stream: Stream) -> N
         end_time: float = time.time()
 
         if results[0] is not None and len(results[0].boxes) != 0 and len(results[0].boxes[0]) is not None:
-            print("x: " + str(util.get_x_offset_deg(results[0].boxes)))
-            print("y: " + str(util.get_y_offset_deg(results[0].boxes)))
+            xyxy = results[0].boxes.xyxy[0]
+            orig_shape = results[0].boxes.orig_shape
+            print("x: " + str(util.get_x_offset_deg_single(xyxy, orig_shape)))
+            print("y: " + str(util.get_y_offset_deg_single(xyxy, orig_shape)))
 
         #if (time.time() - snapshot_time > 10): # snapshot every x seconds
             #snapshotter.submit(results[0])
