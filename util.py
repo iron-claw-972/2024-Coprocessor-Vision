@@ -1,58 +1,51 @@
 import math
-from ultralytics.engine.results import Boxes # type: ignore
+from ultralytics.engine.results import Boxes  # type: ignore
 
 # TODO: Change these to the actual camera values
-FOV = [70, 43.75] # Arducam
+FOV = [70, 43.75]  # Arducam
 # fov = [59.703, 33.583] # Microsoft lifecam or other cameras with diagonal FOV of 68.5 degrees and 1280x720 resolution
 
-def get_x_offset_deg(box: Boxes) -> float:
-    #source: Limelight docs(LINK HERE)
 
-    if len(box[0]):
-        hfov = FOV[0]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
+def get_x_offset_deg_single(xyxy: tuple, orig_shape: tuple) -> float:
+    """calculates x offset (deg) of a single bounding box
 
-        bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
+    Args:
+        xyxy: bounding box coordinates (x1, y1, x2, y2)
+        orig_shape: original image shape (height, width)
+    """
+    # source: Limelight docs(LINK HERE)
+    hfov = FOV[0] * (math.pi / 180)
+    x1, y1, x2, y2 = xyxy
 
-        cx = bbox_center_coord[0]
+    cx = (x1 + x2) / 2
+    nx = (cx - (orig_shape[1] / 2)) / (orig_shape[1] / 2)
+    vw = 2 * math.tan((hfov / 2))
+    vx = vw / 2 * nx
+    x_offset_deg = math.atan(vx / 1) * (180 / math.pi)
 
-        nx = (cx-(box.orig_shape[1]/2))/(box.orig_shape[1]/2)
+    return float(x_offset_deg)
 
-        vw = 2*math.tan((hfov/2))
 
-        vx = vw/2*nx
+def get_y_offset_deg_single(xyxy: tuple, orig_shape: tuple) -> float:
+    """calculates y offset (deg) of a single bounding box
 
-        x_offset_deg = math.atan(vx/1)*(180/math.pi)
+    Args:
+        xyxy: bounding box coordinates (x1, y1, x2, y2)
+        orig_shape: original image shape (height, width)
+    """
+    # source: Limelight docs(LINK HERE)
+    vfov = FOV[1] * (math.pi / 180)
+    x1, y1, x2, y2 = xyxy
 
-        return float(x_offset_deg)
-    
-    return 0
+    cy = (y1 + y2) / 2
+    ny = (cy - (orig_shape[0] / 2)) / (orig_shape[0] / 2)
+    vh = 2 * math.tan((vfov / 2))
+    vy = vh / 2 * ny
+    y_offset_deg = math.atan(vy / 1) * (180 / math.pi)
 
-def get_y_offset_deg(box: Boxes) -> float:
-    #source: Limelight docs(LINK HERE)
+    return float(y_offset_deg)
 
-    if len(box[0]):
-        vfov = FOV[1]*(math.pi/180)
-        x1, y1, x2, y2 = box.xyxy[0]
 
-        bbox_center_coord = [(x1+x2)/2,(y1+y2)/2]
-
-        cy = bbox_center_coord[1]
-
-        ny = (cy-(box.orig_shape[0]/2))/(box.orig_shape[0]/2)
-
-        vh = 2*math.tan((vfov/2))
-
-        vy = vh/2*ny
-
-        y_offset_deg = math.atan(vy/1)*(180/math.pi)
-
-        return float(y_offset_deg)
-    
-    return 0
- 
-    
-# TODO: Add tis if we're using it, low pirority
+# TODO: Add this if we're using it, low priority
 def get_distance(box: Boxes) -> float:
     raise NotImplementedError("get_distance doesn't exist yet -- please write it!")
-
