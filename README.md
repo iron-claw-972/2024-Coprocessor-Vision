@@ -1,2 +1,2 @@
-# 2024-Coprocessor-Vision
+# Coprocessor-Vision
 This is the repository for coprocessor vision. It contains our object detection code. 
